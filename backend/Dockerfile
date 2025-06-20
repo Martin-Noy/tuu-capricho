@@ -1,23 +1,21 @@
-# Usa una imagen base de Node.js (por ejemplo, la 18-alpine)
+# backend/Dockerfile
+
+# 1. Usar una imagen base de Node.js (v18, como se recomienda en el README)
 FROM node:18-alpine
 
-# Establece el directorio de trabajo dentro del contenedor
+# 2. Establecer el directorio de trabajo dentro del contenedor
 WORKDIR /app
 
-# Instala dependencias para pdfkit (requiere cairo, etc.)
-# Esto asegura que las librerías necesarias estén disponibles en el contenedor
-RUN apk add --no-cache python3 make g++ cairo-dev jpeg-dev pango-dev giflib-dev
+# 3. Copiar los archivos de dependencias y luego instalarlas
+# Esto aprovecha el caché de Docker para no reinstalar todo en cada cambio de código
+COPY package*.json ./
+RUN npm install
 
-# Copia los archivos de manifiesto de dependencias y los instala
-COPY package.json ./
-COPY package-lock.json ./
-RUN npm install --omit=dev
-
-# Copia el resto del código de la aplicación
+# 4. Copiar el resto del código de la aplicación
 COPY . .
 
-# Expone el puerto que usa tu aplicación backend
+# 5. Exponer el puerto en el que corre el backend
 EXPOSE 3001
 
-# Comando para iniciar la aplicación
+# 6. El comando para iniciar la aplicación
 CMD ["npm", "start"]

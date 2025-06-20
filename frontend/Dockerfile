@@ -1,32 +1,29 @@
-# Dockerfile para el Frontend (React.js)
-# Ubicar este archivo en la raíz de la carpeta 'frontend'
+# frontend/Dockerfile
 
-# Etapa 1: Construir la aplicación React
+# --- Etapa 1: Build ---
+# Construye la aplicación de React y genera los archivos estáticos
 FROM node:18-alpine AS build
 
 WORKDIR /app
 
-# Copia los archivos de manifiesto de dependencias y los instala
-COPY package.json ./
-COPY package-lock.json ./
-RUN npm install
-
-# Copia el resto del código del frontend
+# Copia TODOS los archivos de la aplicación primero (respetando .dockerignore)
 COPY . .
 
-# Construye la aplicación React para producción
+# Ahora instala las dependencias y luego construye la aplicación
+RUN npm install
 RUN npm run build
 
-# Etapa 2: Servir la aplicación con Nginx
-FROM nginx:alpine
+# --- Etapa 2: Serve ---
+# Usa una imagen de Nginx para servir los archivos estáticos generados
+FROM nginx:stable-alpine
 
-# Copia la configuración de Nginx
-# Asegúrate de crear este archivo en tu carpeta 'frontend/nginx/nginx.conf'
-COPY nginx/nginx.conf /etc/nginx/conf.d/default.conf
-
-# Copia los archivos construidos de la aplicación React al directorio de Nginx
+# Copiar los archivos estáticos desde la etapa de 'build' al directorio web de Nginx
 COPY --from=build /app/build /usr/share/nginx/html
+
+# Copiar la configuración personalizada de Nginx
+COPY nginx/nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 
+# Comando para iniciar Nginx en primer plano
 CMD ["nginx", "-g", "daemon off;"]
