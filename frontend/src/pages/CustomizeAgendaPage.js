@@ -1,6 +1,6 @@
 // frontend/src/pages/CustomizeAgendaPage.js
 import React, { useState, useEffect } from 'react';
-import { Plus, X, UploadCloud, FileText, ShoppingBag, BookOpen } from 'lucide-react'; // Icons
+import { Plus } from 'lucide-react'; // Icons
 import { DUMMY_SECTIONS, DUMMY_TEMPLATES, BASE_PRICE } from '../data/constants'; // Datos dummy movidos
 import Modal from '../components/Modal'; // Componente Modal
 import MessageBox from '../components/MessageBox'; // Componente MessageBox

@@ -1,16 +1,11 @@
 # frontend/Dockerfile
 
 # --- Etapa 1: Build ---
-# Construye la aplicación de React y genera los archivos estáticos
 FROM node:18-alpine AS build
-
 WORKDIR /app
-
-# Copia TODOS los archivos de la aplicación primero (respetando .dockerignore)
-COPY . .
-
-# Ahora instala las dependencias y luego construye la aplicación
+COPY package*.json ./
 RUN npm install
+COPY . .
 RUN npm run build
 
 # --- Etapa 2: Serve ---
