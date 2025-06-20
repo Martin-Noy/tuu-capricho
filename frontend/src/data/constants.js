@@ -52,3 +52,27 @@ export const DUMMY_TEMPLATES = {
 };
 
 export const BASE_PRICE = 3000; // Precio base de la agenda
+
+export const AGENDAS = [
+  {
+    img: "https://placehold.co/400x300/F0F8FF/333333?text=Agenda+Romántica",
+    alt: "Agenda Romántica",
+    title: 'Agenda "Sueños Rosas"',
+    desc: "Una agenda con diseños florales y tonos pastel. Perfecta para amantes de lo romántico.",
+    price: "$4500 ARS"
+  },
+  {
+    img: "https://placehold.co/400x300/FFF0F5/333333?text=Agenda+Minimalista",
+    alt: "Agenda Minimalista",
+    title: 'Agenda "Esencia Simple"',
+    desc: "Diseño limpio y funcional, ideal para quienes buscan simplicidad y organización.",
+    price: "$4200 ARS"
+  },
+  {
+    img: "https://placehold.co/400x300/F5F5DC/333333?text=Agenda+Creativa",
+    alt: "Agenda Creativa",
+    title: 'Agenda "Explosión de Color"',
+    desc: "Una explosión de colores vibrantes y patrones divertidos para inspirarte cada día.",
+    price: "$4800 ARS"
+  }
+];
