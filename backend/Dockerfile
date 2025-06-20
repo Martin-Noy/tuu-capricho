@@ -1,27 +1,23 @@
-# Dockerfile para el Backend (Node.js/Express)
-# Ubicar este archivo en la raíz de la carpeta 'backend'
-
+# Usa una imagen base de Node.js (por ejemplo, la 18-alpine)
 FROM node:18-alpine
 
+# Establece el directorio de trabajo dentro del contenedor
 WORKDIR /app
 
 # Instala dependencias para pdfkit (requiere cairo, etc.)
 # Esto asegura que las librerías necesarias estén disponibles en el contenedor
-RUN apk add --no-cache python3 make g++ libcairo-dev libjpeg-turbo-dev libpango1.0-dev libgif-dev
+RUN apk add --no-cache python3 make g++ cairo-dev jpeg-dev pango-dev giflib-dev
 
 # Copia los archivos de manifiesto de dependencias y los instala
 COPY package.json ./
 COPY package-lock.json ./
-RUN npm install --production
+RUN npm install --omit=dev
 
-# Copia el resto del código del backend
+# Copia el resto del código de la aplicación
 COPY . .
 
-# Crea los directorios de uploads si no existen (Multer los usará)
-RUN mkdir -p uploads/covers uploads/agendas
-
-# Expone el puerto que usa tu aplicación Node.js
+# Expone el puerto que usa tu aplicación backend
 EXPOSE 3001
 
 # Comando para iniciar la aplicación
-CMD ["node", "src/app.js"]
+CMD ["npm", "start"]
