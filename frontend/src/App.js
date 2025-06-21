@@ -1,11 +1,11 @@
 // frontend/src/App.js
 import React from 'react';
-import { Routes, Route, Link, useNavigate } from 'react-router-dom';
+import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import CustomizeAgendaPage from './pages/CustomizeAgendaPage';
 
 function App() {
-  const navigate = useNavigate();
+  const location = useLocation();
 
   const navButtonClass = (isActive) =>
     `px-4 py-2 rounded-lg text-lg font-semibold transition-all
@@ -23,15 +23,15 @@ function App() {
         <nav aria-label="Navegación principal">
           <Link
             to="/"
-            className={navButtonClass(window.location.pathname === '/')}
-            aria-current={window.location.pathname === '/' ? 'page' : undefined}
+            className={navButtonClass(location.pathname === '/')}
+            aria-current={location.pathname === '/' ? 'page' : undefined}
           >
             Inicio
           </Link>
           <Link
             to="/customize"
-            className={navButtonClass(window.location.pathname === '/customize')}
-            aria-current={window.location.pathname === '/customize' ? 'page' : undefined}
+            className={navButtonClass(location.pathname === '/customize')}
+            aria-current={location.pathname === '/customize' ? 'page' : undefined}
           >
             Personaliza tu Agenda
           </Link>
@@ -41,7 +41,7 @@ function App() {
       {/* Main Content */}
       <main className="container mx-auto p-6 lg:p-10">
         <Routes>
-          <Route path="/" element={<HomePage onCustomizeClick={() => navigate('/customize')} />} />
+          <Route path="/" element={<HomePage />} />
           <Route path="/customize" element={<CustomizeAgendaPage />} />
         </Routes>
       </main>
