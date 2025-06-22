@@ -1,13 +1,26 @@
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
+const path = require('path');
+const pdfController = require('../controllers/pdfController');
 
-// Ejemplo de endpoint para generar PDF
-router.post('/', async (req, res) => {
-  // Aquí iría la lógica para generar el PDF usando los datos recibidos
-  // Por ejemplo: req.body, req.file, etc.
-  // Puedes agregar tu lógica personalizada aquí
-
-  res.json({ message: 'PDF generado correctamente (endpoint de ejemplo)' });
+// Configura Multer para guardar imágenes de portada
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, path.join(__dirname, '../../uploads/covers'));
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + '-' + file.originalname);
+  }
 });
+const upload = multer({ storage });
+
+// Endpoint real para generar PDF
+router.post(
+  '/generate',
+  upload.single('coverImage'), // 'coverImage' debe coincidir con el nombre en el FormData del frontend
+  pdfController.generateAgendaPdf
+);
 
 module.exports = router;

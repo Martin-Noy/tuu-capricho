@@ -5,8 +5,15 @@ const path = require('path');
 // const db = require('../config/db');
 
 exports.generateAgendaPdf = async (req, res) => {
-  const { selectedSections, textColor, coverImageName } = req.body; // Recibe datos del frontend
-  const coverImagePath = req.file ? req.file.path : null; // Ruta de la imagen subida por Multer
+  // selectedSections y textColor llegan como campos de FormData (string)
+  let selectedSections = [];
+  try {
+    selectedSections = JSON.parse(req.body.selectedSections);
+  } catch {
+    selectedSections = [];
+  }
+  const textColor = req.body.textColor || '#000000';
+  const coverImagePath = req.file ? req.file.path : null;
 
   const doc = new PDFDocument({
     size: 'A4',

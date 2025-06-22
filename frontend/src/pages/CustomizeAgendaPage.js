@@ -12,8 +12,11 @@ import SectionCustomizer from '../components/SectionCustomizer';
 import TextColorPicker from '../components/TextColorPicker';
 import PriceSummary from '../components/PriceSummary';
 import OrderButtons from '../components/OrderButtons';
+import db from '../config/db';
 
 function CustomizeAgendaPage() {
+  console.log("🚀 ~ CustomizeAgendaPage ~ CustomizeAgendaPage:");
+
   const [coverImage, setCoverImage] = useState(null);
   const [coverImagePreview, setCoverImagePreview] = useState(null);
   const [selectedSections, setSelectedSections] = useState([]);
@@ -75,11 +78,11 @@ function CustomizeAgendaPage() {
         )
       );
     } else if (value === '') { // Allow empty input temporarily for user to type
-        setSelectedSections(prev =>
-            prev.map(item =>
-                item.section.id === sectionId ? { ...item, pages: '' } : item
-            )
-        );
+      setSelectedSections(prev =>
+        prev.map(item =>
+          item.section.id === sectionId ? { ...item, pages: '' } : item
+        )
+      );
     }
   };
 
@@ -136,18 +139,17 @@ function CustomizeAgendaPage() {
       textColor
     });
 
-    // En un escenario real, harías una llamada a tu backend:
-    /*
+
     const formData = new FormData();
     if (coverImage) formData.append('coverImage', coverImage);
     formData.append('selectedSections', JSON.stringify(selectedSections));
     formData.append('textColor', textColor);
-
     try {
       const response = await fetch(`${process.env.REACT_APP_API_URL}/pdf/generate`, {
         method: 'POST',
         body: formData,
       });
+
       if (!response.ok) throw new Error('Error al generar PDF');
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
@@ -157,10 +159,8 @@ function CustomizeAgendaPage() {
       console.error('Error generating PDF:', error);
       setMessageBox({ message: `Error al generar previsualización: ${error.message}`, type: 'error', isOpen: true });
     }
-    */
-
-    await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate network delay
-    setMessageBox({ message: 'Previsualización generada con éxito. (Simulado)', type: 'success', isOpen: true });
+    // await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate network delay
+    // setMessageBox({ message: 'Previsualización generada con éxito. (Simulado)', type: 'success', isOpen: true });
   };
 
   // Simulate purchase
