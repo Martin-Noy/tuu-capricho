@@ -1,4 +1,129 @@
-/* src/index.css */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+// Estilos globales para la aplicación, usando la paleta de colores de la marca.
+:root {
+  --rosa-principal: #f685a9;
+  --amarillo-pastel: #f3e07d;
+  --azul-cielo: #cee0e8;
+  --rosa-palido: #ffecf8;
+  --texto-oscuro: #6D5D6E;
+  --blanco: #FFFFFF;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--blanco);
+  color: var(--texto-oscuro);
+}
+
+.app-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+h1, h2 {
+  color: var(--rosa-principal);
+}
+
+.btn {
+  background-color: var(--rosa-principal);
+  color: var(--blanco);
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s ease;
+}
+
+.btn:hover {
+  background-color: #e57498;
+}
+
+.btn-secondary {
+    background-color: var(--azul-cielo);
+    color: var(--texto-oscuro);
+}
+
+.btn-secondary:hover {
+    background-color: #b9d1da;
+}
+
+.pdf-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.pdf-item {
+    background-color: var(--rosa-palido);
+    padding: 1.5rem;
+    border-radius: 12px;
+    text-align: center;
+    border: 1px solid var(--azul-cielo);
+}
+
+.pdf-item p {
+    font-weight: 500;
+    word-break: break-word;
+}
+
+.form-container {
+    background-color: #fafafa;
+    padding: 2rem;
+    border-radius: 12px;
+    margin-top: 2rem;
+    border: 1px solid var(--azul-cielo);
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.form-group input, .form-group select {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid var(--azul-cielo);
+    box-sizing: border-box;
+}
+
+.viewer-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.viewer-content {
+  background-color: white;
+  width: 80%;
+  height: 90%;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.viewer-header {
+  padding: 1rem;
+  text-align: right;
+  background-color: #f1f1f1;
+}

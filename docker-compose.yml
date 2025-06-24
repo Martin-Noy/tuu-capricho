@@ -1,62 +1,50 @@
-# docker-compose.yml
-# Ubicar este archivo en la raíz del repositorio (donde están las carpetas frontend y backend)
-
 version: '3.8'
 
 services:
-  # Servicio de la base de datos PostgreSQL
   db:
-    image: postgres:13-alpine # Usa una imagen de PostgreSQL estable y ligera
-    environment:
-      POSTGRES_DB: tuu_capricho_db
-      POSTGRES_USER: tuu_capricho_user
-      POSTGRES_PASSWORD: tu_contraseña_segura_docker # ¡CAMBIA ESTO!
+    image: postgres:13-alpine
+    container_name: tuu-capricho-db
+    env_file:
+      - ./.env # Carga variables desde el archivo .env
     ports:
-      - "5432:5432" # Mapea el puerto del contenedor al host
+      - "5432:5432"
     volumes:
-      - db_data:/var/lib/postgresql/data # Persistencia de datos de la DB
-      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql 
-    healthcheck: # Comprobación de salud para esperar a que la DB esté lista
-      test: ["CMD-SHELL", "pg_isready -U tuu_capricho_user -d tuu_capricho_db"]
+      - ./postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 5
-    networks:
-      - app-network
 
-  # Servicio del Backend (Node.js/Express)
   backend:
     build:
-      context: ./backend # Ruta al Dockerfile del backend
-      dockerfile: Dockerfile # Nombre del Dockerfile en el contexto
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: tuu-capricho-server
     ports:
-      - "8080:8080" # Mapea el puerto del contenedor al host
+      - "8000:8000"
     env_file:
-      - ./backend/.env # Carga las variables de entorno desde un archivo .env
+      - ./.env # El backend también necesita las variables
     volumes:
-      - ./backend/src:/usr/src/app/src # Monta el código fuente en el contenedor
+      - ./backend:/usr/src/app         # Monta toda la carpeta del backend
+      - /usr/src/app/node_modules    # Excluye node_modules para usar los del contenedor
+      - ./pdfs:/usr/src/app/pdfs:ro  # Monta la carpeta de PDFs (solo lectura)
     depends_on:
-      - db # El backend depende del servicio de la DB
-    networks:
-      - app-network
+      db:
+        condition: service_healthy # Espera a que la DB esté saludable
 
-  # Servicio del Frontend (React.js)
   frontend:
     build:
-      context: ./frontend # Ruta al Dockerfile del frontend
-      dockerfile: Dockerfile # Nombre del Dockerfile en el contexto
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: tuu-capricho-client
     ports:
-      - "80:80" # Expone el puerto 80 del contenedor al puerto 80 del host
-    environment:
-      REACT_APP_API_URL: http://localhost/api # Nginx en el frontend proxeará a /api, que apunta al backend
+      - "5173:5173" # Puerto común para Vite (React)
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
     depends_on:
-      - backend # El frontend depende del backend (aunque Nginx es el que hace la llamada)
-    networks:
-      - app-network
+      - backend
 
 volumes:
-  db_data: # Define el volumen para los datos de PostgreSQL
-
-networks:
-  app-network:
-    driver: bridge
+  postgres-data:

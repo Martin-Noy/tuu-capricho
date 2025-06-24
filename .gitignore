@@ -1,0 +1,6 @@
+.env
+/postgres-data
+/pdfs
+*/node_modules
+/.DS_Store
+/.vscode

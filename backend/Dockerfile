@@ -1,21 +1,20 @@
-# backend/Dockerfile
-
-# 1. Usar una imagen base de Node.js (v18, como se recomienda en el README)
+# Usa una imagen base de Node.js
 FROM node:18-alpine
 
-# 2. Establecer el directorio de trabajo dentro del contenedor
-WORKDIR /app
+# Define el directorio de trabajo
+WORKDIR /usr/src/app
 
-# 3. Copiar los archivos de dependencias y luego instalarlas
-# Esto aprovecha el caché de Docker para no reinstalar todo en cada cambio de código
+# Copia package.json y package-lock.json
 COPY package*.json ./
+
+# Instala las dependencias
 RUN npm install
 
-# 4. Copiar el resto del código de la aplicación
+# Copia el resto del código de la aplicación
 COPY . .
 
-# 5. Exponer el puerto en el que corre el backend
-EXPOSE 3001
+# Expone el puerto que usará la app
+EXPOSE 8000
 
-# 6. El comando para iniciar la aplicación
-CMD ["npm", "start"]
+# Comando para iniciar la aplicación (con hot-reloading para desarrollo)
+CMD [ "npm", "run", "dev" ]

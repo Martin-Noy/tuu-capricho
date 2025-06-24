@@ -1,41 +1,30 @@
+// backend/src/models/Order.js
 const { DataTypes } = require('sequelize');
-const sequelize = require('../config/db').pool; // Ajusta si usas otra instancia
+const sequelize = require('../config/sequelize');
 
 const Order = sequelize.define('Order', {
   id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
-    autoIncrement: true
-  },
-  user_id: {
-    type: DataTypes.INTEGER,
-    allowNull: false
-  },
-  total_price: {
-    type: DataTypes.FLOAT,
-    allowNull: false
+    autoIncrement: true,
   },
   order_type: {
-    type: DataTypes.STRING,
-    allowNull: false
+    type: DataTypes.ENUM('physical', 'digital'),
+    allowNull: false,
   },
-  order_date: {
-    type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW
+  customer_details: {
+    type: DataTypes.JSONB,
+    allowNull: false,
+  },
+  pdf_filename: {
+    type: DataTypes.STRING,
+    allowNull: false,
   },
   status: {
     type: DataTypes.STRING,
-    defaultValue: 'pending'
+    allowNull: false,
+    defaultValue: 'pending',
   },
-  cover_image_info: {
-    type: DataTypes.STRING
-  },
-  text_color: {
-    type: DataTypes.STRING
-  }
-}, {
-  tableName: 'Pedidos',
-  timestamps: false
 });
 
 module.exports = Order;

@@ -1,65 +1,69 @@
+// backend/src/server.js
 const express = require('express');
 const cors = require('cors');
-const multer = require('multer');
+const fs = require('fs/promises');
 const path = require('path');
-const fs = require('fs');
-require('dotenv').config();
-
-const sectionsRoutes = require('./routes/sections');
-const templatesRoutes = require('./routes/templates');
-const pricesRoutes = require('./routes/prices');
-const pdfRoutes = require('./routes/pdf');
-const ordersRoutes = require('./routes/orders');
+const sequelize = require('./config/sequelize');
+const Order = require('./models/order');
 
 const app = express();
-
-// --- Middlewares globales ---
-app.use(cors()); // Puedes personalizar el origen en producción
+app.use(cors());
 app.use(express.json());
 
-// --- Asegurar carpetas necesarias ---
-const coversDir = path.join(__dirname, '../uploads/covers');
-const uploadsDir = path.join(__dirname, '../uploads');
-const templatesDir = path.join(__dirname, '../templates');
-[coversDir, uploadsDir, templatesDir].forEach(dir => {
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+const PORT = process.env.SERVER_PORT || 8000;
+const PDFS_DIR = path.join(__dirname, '..', 'pdfs');
+
+// Endpoint para listar PDFs
+app.get('/api/pdfs', async (req, res) => {
+  try {
+    const files = await fs.readdir(PDFS_DIR);
+    res.json({ files });
+  } catch (error) {
+    res.status(500).send('Error al leer el directorio de PDFs');
+  }
 });
 
-// --- Configuración de Multer para subida de imágenes ---
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, coversDir),
-  filename: (req, file, cb) => cb(null, `${Date.now()}-${file.originalname}`)
-});
-const upload = multer({ storage });
+// Endpoint para previsualizar un PDF
+app.get('/api/pdfs/:filename', (req, res) => {
+  const { filename } = req.params;
+  const filePath = path.join(PDFS_DIR, filename);
 
-// --- Rutas de la API ---
-app.use('/api/sections', sectionsRoutes);
-app.use('/api/templates', templatesRoutes);
-app.use('/api/prices', pricesRoutes);
-// Solo aplica Multer en la ruta que lo necesita
-app.use('/api/pdf', (req, res, next) => {
-  console.log("🚀 ~ app.use ~ /api/pdf:", req.body)
-  
-}, pdfRoutes);
-app.use('/api/orders', ordersRoutes);
-
-// --- Servir archivos estáticos ---
-app.use('/uploads', express.static(uploadsDir));
-app.use('/templates', express.static(templatesDir));
-
-// --- Ruta de prueba ---
-app.get('/', (req, res) => {
-  res.send('API de Tuu Capricho funcionando!');
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
+  res.sendFile(filePath, (err) => {
+      if (err) {
+          res.status(404).send('Archivo no encontrado');
+      }
+  });
 });
 
-// --- Manejo de errores global ---
-app.use((err, req, res, next) => {
-  console.error('Error:', err.stack);
-  res.status(500).send('Algo salió mal en el servidor!');
+// Endpoint para crear una orden
+app.post('/api/orders', async (req, res) => {
+  try {
+    const { orderType, customerDetails, pdfFilename } = req.body;
+    // Aquí iría la validación de datos
+    
+    const newOrder = await Order.create({
+      order_type: orderType,
+      customer_details: customerDetails,
+      pdf_filename: pdfFilename,
+    });
+    
+    // Si es digital, aquí se llamaría al servicio de email
+    // await emailService.sendPdfByEmail(...)
+
+    res.status(201).json(newOrder);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
 });
 
-// --- Arranque del servidor ---
-const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
-  console.log(`Servidor backend corriendo en http://localhost:${PORT}`);
+
+// Sincronizar con la DB e iniciar servidor
+sequelize.sync().then(() => {
+  app.listen(PORT, () => {
+    console.log(`Servidor escuchando en el puerto ${PORT}`);
+  });
+}).catch(err => {
+  console.error('No se pudo conectar a la base de datos:', err);
 });
