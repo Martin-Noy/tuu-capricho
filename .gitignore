@@ -1,0 +1,21 @@
+
+# Ignore PostgreSQL data directory
+# This directory contains the database files and should not be tracked by Git.
+postgres-data/
+PDFs/
+*/node_modules/
+# Ignore log files 
+*.log
+# Ignore temporary files
+*.tmp
+# Ignore environment configuration files
+.env
+# Ignore build artifacts
+dist/
+# Ignore coverage reports
+coverage/
+# Ignore IDE specific files
+.idea/
+# Ignore OS generated files
+.DS_Store
+*/package-lock.json
