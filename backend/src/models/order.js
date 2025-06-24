@@ -1,4 +1,3 @@
-// backend/src/models/Order.js
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/sequelize');
 
@@ -25,6 +24,9 @@ const Order = sequelize.define('Order', {
     allowNull: false,
     defaultValue: 'pending',
   },
+}, {
+  // Opciones adicionales del modelo
+  timestamps: true, // Habilita createdAt y updatedAt
 });
 
 module.exports = Order;

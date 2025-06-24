@@ -9,7 +9,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ./postgres-data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
@@ -24,11 +24,11 @@ services:
     ports:
       - "8000:8000"
     env_file:
-      - ./.env # El backend también necesita las variables
+      - ./.env
     volumes:
-      - ./backend:/usr/src/app         # Monta toda la carpeta del backend
-      - /usr/src/app/node_modules    # Excluye node_modules para usar los del contenedor
-      - ./pdfs:/usr/src/app/pdfs:ro  # Monta la carpeta de PDFs (solo lectura)
+      - ./backend:/usr/src/app
+      - /usr/src/app/node_modules
+      - ./pdfs:/usr/src/app/pdfs:ro # Monta la carpeta de PDFs (solo lectura)
     depends_on:
       db:
         condition: service_healthy # Espera a que la DB esté saludable
@@ -39,7 +39,7 @@ services:
       dockerfile: Dockerfile
     container_name: tuu-capricho-client
     ports:
-      - "5173:5173" # Puerto común para Vite (React)
+      - "5173:5173"
     volumes:
       - ./frontend:/app
       - /app/node_modules
