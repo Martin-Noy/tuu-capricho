@@ -1,9 +1,9 @@
 import React from 'react';
 import Modal from './Modal';
+import { DUMMY_TEMPLATES } from '../data/constants.js'; // Importa DUMMY_TEMPLATES aquí
 
 function SectionsSection({
   DUMMY_SECTIONS,
-  DUMMY_TEMPLATES,
   selectedSections,
   openAddSectionModal,
   isAddSectionModalOpen,
@@ -14,31 +14,44 @@ function SectionsSection({
   handleDragStart,
   handleDragOver,
   handleDrop,
-  setIsAddSectionModalOpen
+  setIsAddSectionModalOpen,
+  totalPagesUsed,
+  maxPages
 }) {
-  console.log("🚀 ~ DUMMY_TEMPLATES:", DUMMY_TEMPLATES)
-  
+  const pagesLeft = maxPages - totalPagesUsed;
+
   return (
     <div className="mb-8 p-6 bg-pink-50 rounded-xl border border-pink-200">
-      <h3 className="text-2xl font-bold text-pink-800 mb-4 flex items-center">
-        2. Secciones y Contenido
-      </h3>
-      <p className="text-gray-600 mb-4">
-        Añade y organiza las secciones de tu agenda. Arrastra y suelta para reordenar.
-      </p>
+      <div className="flex justify-between items-center mb-4">
+        <div>
+          <h3 className="text-2xl font-bold text-pink-800">2. Secciones y Contenido</h3>
+          <p className="text-gray-600">Añade, organiza y personaliza las secciones de tu agenda.</p>
+        </div>
+        <div className="text-right">
+          <div className="text-xl font-bold text-pink-800">
+            Páginas: {totalPagesUsed} / {maxPages}
+          </div>
+          <div className="text-sm text-gray-600">
+            ({pagesLeft} restantes)
+          </div>
+        </div>
+      </div>
+      
       <button
         onClick={openAddSectionModal}
-        className="px-6 py-3 bg-gradient-to-r from-pink-400 to-red-500 text-white font-semibold rounded-lg shadow-md hover:from-pink-500 hover:to-red-600 transition-all transform hover:scale-105 flex items-center justify-center mb-6"
+        className="px-6 py-3 bg-gradient-to-r from-pink-400 to-red-500 text-white font-semibold rounded-lg shadow-md hover:from-pink-500 hover:to-red-600 transition-all transform hover:scale-105 mb-6"
       >
         Añadir Sección
       </button>
+
+      {/* Modal para añadir secciones */}
       <Modal
         isOpen={isAddSectionModalOpen}
         onClose={() => setIsAddSectionModalOpen(false)}
         title="Seleccionar Secciones"
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-80 overflow-y-auto pr-2">
-          {DUMMY_SECTIONS.map(section => (
+          {Object.values(DUMMY_SECTIONS).map(section => (
             <div
               key={section.id}
               className="bg-gray-50 p-4 rounded-lg border border-gray-200 flex items-center justify-between shadow-sm"
@@ -59,51 +72,66 @@ function SectionsSection({
           ))}
         </div>
       </Modal>
+
+      {/* Lista de secciones seleccionadas */}
       <ul>
-        {selectedSections.map((item, idx) => (
-          <li
-            key={item.section.id}
-            className="mb-4 p-4 bg-white rounded-lg shadow flex flex-col md:flex-row items-center gap-4"
-            draggable
-            onDragStart={e => handleDragStart(e, idx)}
-            onDragOver={handleDragOver}
-            onDrop={e => handleDrop(e, idx)}
-          >
-            <div className="flex-1">
-              <div className="font-semibold">{item.section.name}</div>
-              <div className="text-sm text-gray-500">{item.section.description}</div>
-              {item.section.isVariablePages && (
-                <input
-                  type="number"
-                  min={40}
-                  max={80}
-                  value={item.pages}
-                  onChange={e => handlePagesChange(item.section.id, e.target.value)}
-                  className="mt-2 border rounded px-2 py-1 w-24"
-                  placeholder="Páginas"
-                />
-              )}
-              <select
-                value={item.template?.id || ''}
-                onChange={e => handleTemplateChange(item.section.id, e.target.value)}
-                className="mt-2 border rounded px-2 py-1 w-full md:w-48"
-              >
-                {(Array.isArray(DUMMY_TEMPLATES[item.section.id]) ? DUMMY_TEMPLATES[item.section.id] : []).map(template => (
-                  <option key={template.id} value={template.id}>
-                    {template.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <button
-              onClick={() => removeSection(item.section.id)}
-              className="text-red-500 hover:text-red-700 font-bold text-lg"
-              title="Quitar sección"
+        {selectedSections.map((item, idx) => {
+          const currentSectionTemplates = Array.isArray(DUMMY_TEMPLATES[item.section.id]) ? DUMMY_TEMPLATES[item.section.id] : [];
+          const maxAllowedForThisInput = (parseInt(item.pages, 10) || 0) + pagesLeft;
+
+          return (
+            <li
+              key={item.section.id}
+              className="mb-4 p-4 bg-white rounded-lg shadow-md flex flex-col md:flex-row items-start gap-4"
+              draggable
+              onDragStart={e => handleDragStart(e, idx)}
+              onDragOver={handleDragOver}
+              onDrop={e => handleDrop(e, idx)}
             >
-              ×
-            </button>
-          </li>
-        ))}
+              <div className="flex-grow">
+                <h4 className="font-semibold text-lg text-gray-800">{item.section.name}</h4>
+                <p className="text-sm text-gray-500 mb-3">{item.section.description}</p>
+                
+                <div className="flex flex-col md:flex-row gap-4 items-center">
+                  {/* Selector de Template */}
+                  <select
+                    value={item.template?.id || ''}
+                    onChange={e => handleTemplateChange(item.section.id, e.target.value)}
+                    className="border rounded px-2 py-1 w-full md:w-48"
+                  >
+                    {currentSectionTemplates.map(template => (
+                      <option key={template.id} value={template.id}>
+                        {template.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              
+              {/* Información de Páginas y botón de eliminar sección */}
+              <div className="flex flex-col items-end">
+                {item.section.isVariablePages && (
+                  <input
+                    type="number"
+                    min={40}
+                    max={80}
+                    value={item.pages}
+                    onChange={e => handlePagesChange(item.section.id, e.target.value)}
+                    className="border rounded px-2 py-1 w-24 text-center mb-2"
+                    placeholder="Páginas"
+                  />
+                )}
+                <button
+                  onClick={() => removeSection(item.section.id)}
+                  className="text-red-500 hover:text-red-700 font-bold text-lg"
+                  title="Quitar sección"
+                >
+                  ×
+                </button>
+              </div>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );

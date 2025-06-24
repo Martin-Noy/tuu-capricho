@@ -20,6 +20,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - app-network
 
   # Servicio del Backend (Node.js/Express)
   backend:
@@ -27,21 +29,15 @@ services:
       context: ./backend # Ruta al Dockerfile del backend
       dockerfile: Dockerfile # Nombre del Dockerfile en el contexto
     ports:
-      - "3001:3001" # Mapea el puerto del contenedor al host (opcional, Nginx lo proxeará)
-    environment:
-      PORT: 3001
-      DB_USER: tuu_capricho_user
-      DB_HOST: db # Nombre del servicio de la DB en docker-compose
-      DB_NAME: tuu_capricho_db
-      DB_PASSWORD: tu_contraseña_segura_docker # ¡DEBE COINCIDIR CON EL DE LA DB!
-      DB_PORT: 5432
+      - "8080:8080" # Mapea el puerto del contenedor al host
+    env_file:
+      - ./backend/.env # Carga las variables de entorno desde un archivo .env
     volumes:
-      - ./backend/uploads:/app/uploads # Persistencia para archivos subidos (carátulas, PDFs generados)
-      - ./backend/templates:/app/templates # Si tienes templates predefinidos
+      - ./backend/src:/usr/src/app/src # Monta el código fuente en el contenedor
     depends_on:
-      db:
-        condition: service_healthy # Espera a que la DB esté saludable
-    restart: always # Siempre reinicia el contenedor si se detiene
+      - db # El backend depende del servicio de la DB
+    networks:
+      - app-network
 
   # Servicio del Frontend (React.js)
   frontend:
@@ -54,7 +50,12 @@ services:
       REACT_APP_API_URL: http://localhost/api # Nginx en el frontend proxeará a /api, que apunta al backend
     depends_on:
       - backend # El frontend depende del backend (aunque Nginx es el que hace la llamada)
-    restart: always # Siempre reinicia el contenedor si se detiene
+    networks:
+      - app-network
 
 volumes:
   db_data: # Define el volumen para los datos de PostgreSQL
+
+networks:
+  app-network:
+    driver: bridge

@@ -1,15 +1,17 @@
 // frontend/src/pages/CustomizeAgendaPage.js
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { DUMMY_SECTIONS, DUMMY_TEMPLATES, BASE_PRICE } from '../data/constants.js';
 import MessageBox from '../components/MessageBox';
 import PriceSummary from '../components/PriceSummary';
 import OrderButtons from '../components/OrderButtons';
 import { useNavigate } from 'react-router-dom';
 
-// Nuevos componentes seccionados
+// Componentes seccionados
 import CoverImageSection from '../components/CoverImageSection';
 import SectionsSection from '../components/SectionsSection';
 import TextColorSection from '../components/TextColorSection';
+
+const MAX_TOTAL_PAGES = 80;
 
 function CustomizeAgendaPage() {
   const [coverImage, setCoverImage] = useState(null);
@@ -21,6 +23,13 @@ function CustomizeAgendaPage() {
   const [messageBox, setMessageBox] = useState({ message: '', type: 'info', isOpen: false });
   const navigate = useNavigate();
 
+  // Calcula el total de páginas usadas cada vez que las secciones seleccionadas cambian.
+  const totalPagesUsed = useMemo(() => {
+    return selectedSections.reduce((total, item) => total + (parseInt(item.pages, 10) || 0), 0);
+  }, [selectedSections]);
+
+  const pagesLeft = MAX_TOTAL_PAGES - totalPagesUsed;
+
   // --- Handlers de imagen ---
   // Handle image upload
   const handleImageUpload = (event) => {
@@ -28,9 +37,7 @@ function CustomizeAgendaPage() {
     if (file) {
       setCoverImage(file);
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setCoverImagePreview(reader.result);
-      };
+      reader.onloadend = () => setCoverImagePreview(reader.result);
       reader.readAsDataURL(file);
     } else {
       setCoverImage(null);
@@ -47,17 +54,30 @@ function CustomizeAgendaPage() {
   // Add section to selected sections
   const addSection = (sectionId) => {
     const sectionToAdd = Object.values(DUMMY_SECTIONS).find(s => s.id === sectionId);
-    const templatesArray = Array.isArray(DUMMY_TEMPLATES[sectionId]) ? DUMMY_TEMPLATES[sectionId] : [];
-    if (sectionToAdd && !selectedSections.some(s => s.section.id === sectionId)) {
-      setSelectedSections(prev => [
-        ...prev,
-        {
-          section: sectionToAdd,
-          pages: sectionToAdd.isVariablePages ? 40 : null,
-          template: templatesArray.length > 0 ? templatesArray[0] : null,
-        }
-      ]);
+    if (!sectionToAdd) return;
+
+    // Prevenir añadir si ya existe
+    if (selectedSections.some(s => s.section.id === sectionId)) {
+      setMessageBox({ message: 'Esta sección ya ha sido añadida.', type: 'warning', isOpen: true });
+      return;
     }
+
+    // Prevenir añadir si excede el límite de páginas
+    const sectionPages = sectionToAdd.pageCount || 0;
+    if (totalPagesUsed + sectionPages > MAX_TOTAL_PAGES) {
+      setMessageBox({ message: `No hay suficientes páginas. Necesitas ${sectionPages} y solo quedan ${pagesLeft}.`, type: 'error', isOpen: true });
+      return;
+    }
+
+    const templatesArray = Array.isArray(DUMMY_TEMPLATES[sectionId]) ? DUMMY_TEMPLATES[sectionId] : [];
+    setSelectedSections(prev => [
+      ...prev,
+      {
+        section: sectionToAdd,
+        pages: sectionPages, // Usamos el pageCount del objeto
+        template: templatesArray.length > 0 ? templatesArray[0] : null,
+      }
+    ]);
     setIsAddSectionModalOpen(false);
   };
 
@@ -67,20 +87,28 @@ function CustomizeAgendaPage() {
   };
 
   // Handle page quantity change for a section
-  const handlePagesChange = (sectionId, value) => {
-    const numValue = parseInt(value, 10);
-    if (!isNaN(numValue) && numValue >= 40 && numValue <= 80) {
+  const handlePagesChange = (sectionId, newPages) => {
+    const numValue = parseInt(newPages, 10);
+
+    // Permite que el input esté vacío temporalmente
+    if (newPages === '') {
+      setSelectedSections(prev => prev.map(item =>
+        item.section.id === sectionId ? { ...item, pages: '' } : item
+      ));
+      return;
+    }
+
+    const sectionToChange = selectedSections.find(item => item.section.id === sectionId);
+    const otherSectionsPages = totalPagesUsed - (parseInt(sectionToChange.pages, 10) || 0);
+
+    if (!isNaN(numValue) && (otherSectionsPages + numValue) <= MAX_TOTAL_PAGES) {
       setSelectedSections(prev =>
         prev.map(item =>
           item.section.id === sectionId ? { ...item, pages: numValue } : item
         )
       );
-    } else if (value === '') { // Allow empty input temporarily for user to type
-      setSelectedSections(prev =>
-        prev.map(item =>
-          item.section.id === sectionId ? { ...item, pages: '' } : item
-        )
-      );
+    } else {
+      setMessageBox({ message: `No puedes exceder el límite de ${MAX_TOTAL_PAGES} páginas.`, type: 'error', isOpen: true });
     }
   };
 
@@ -138,14 +166,6 @@ function CustomizeAgendaPage() {
   // Simulate PDF generation
   const handlePreviewAgenda = async () => {
     setMessageBox({ message: 'Generando previsualización de la agenda...', type: 'info', isOpen: true });
-    // Simulate API call to backend for PDF generation
-    console.log("Datos para generar PDF:", {
-      coverImage: coverImage ? coverImage.name : 'No image',
-      selectedSections,
-      textColor
-    });
-
-
     const formData = new FormData();
     if (coverImage) formData.append('coverImage', coverImage);
     formData.append('selectedSections', JSON.stringify(selectedSections));
@@ -165,48 +185,14 @@ function CustomizeAgendaPage() {
       console.error('Error generating PDF:', error);
       setMessageBox({ message: `Error al generar previsualización: ${error.message}`, type: 'error', isOpen: true });
     }
-    // await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate network delay
-    // setMessageBox({ message: 'Previsualización generada con éxito. (Simulado)', type: 'success', isOpen: true });
   };
 
   // Simulate purchase
   const handlePurchase = async (type) => {
     setMessageBox({ message: `Iniciando pedido de agenda ${type === 'physical' ? 'física' : 'digital'}...`, type: 'info', isOpen: true });
-    // In a real app, send order details to backend
-    console.log("Detalles del pedido:", { type, totalPrice, coverImage: coverImage ? coverImage.name : 'N/A', selectedSections, textColor });
-
-    // Ejemplo de llamada a la API de pedidos:
-    /*
-    try {
-      const orderDetails = {
-        userId: 'someUserId', // Replace with actual user ID
-        items: selectedSections.map(s => ({
-          sectionId: s.section.id,
-          pages: s.pages,
-          templateId: s.template?.id,
-          sectionPrice: s.section.isVariablePages && s.pages ? (s.section.percentageAdditional * s.pages * s.section.basePriceSection) / 100 : s.section.basePriceSection,
-        })),
-        totalPrice: totalPrice,
-        orderType: type,
-        coverImageInfo: coverImage ? { name: coverImage.name, url: 'some_uploaded_url' } : null,
-        textColor: textColor,
-      };
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/orders`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(orderDetails),
-      });
-      if (!response.ok) throw new Error('Error al crear el pedido');
-      const data = await response.json();
-      setMessageBox({ message: `¡Pedido ${data.orderId} de agenda ${type === 'physical' ? 'física' : 'digital'} iniciado!`, type: 'success', isOpen: true });
-    } catch (error) {
-      console.error('Error creating order:', error);
-      setMessageBox({ message: `Error al procesar el pedido: ${error.message}`, type: 'error', isOpen: true });
-    }
-    */
-    await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate network delay
+    // Simulación de compra
+    await new Promise(resolve => setTimeout(resolve, 2000));
     setMessageBox({ message: `¡Pedido de agenda ${type === 'physical' ? 'física' : 'digital'} iniciado! (Simulado)`, type: 'success', isOpen: true });
-
   };
 
   return (
@@ -226,8 +212,9 @@ function CustomizeAgendaPage() {
       {/* --- Paso 2: Secciones --- */}
       <SectionsSection
         DUMMY_SECTIONS={DUMMY_SECTIONS}
+        DUMMY_TEMPLATES={DUMMY_TEMPLATES}
         selectedSections={selectedSections}
-        openAddSectionModal={openAddSectionModal}
+        openAddSectionModal={() => setIsAddSectionModalOpen(true)}
         isAddSectionModalOpen={isAddSectionModalOpen}
         addSection={addSection}
         removeSection={removeSection}
@@ -237,6 +224,8 @@ function CustomizeAgendaPage() {
         handleDragOver={handleDragOver}
         handleDrop={handleDrop}
         setIsAddSectionModalOpen={setIsAddSectionModalOpen}
+        totalPagesUsed={totalPagesUsed}
+        maxPages={MAX_TOTAL_PAGES}
       />
 
       {/* --- Paso 3: Color de texto --- */}

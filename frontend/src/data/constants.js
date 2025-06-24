@@ -1,15 +1,17 @@
 // frontend/src/data/constants.js
 
 export const DUMMY_SECTIONS = [
-  { id: '1', name: 'Notas', description: 'Sección para tomar apuntes.', isVariablePages: true, percentageAdditional: 0.05, basePriceSection: 500 },
-  { id: '2', name: 'Agenda Semanal', description: 'Organizador semanal.', isVariablePages: false, percentageAdditional: 0.10, basePriceSection: 800 },
-  { id: '3', name: 'Calendario Mensual', description: 'Vista mensual del calendario.', isVariablePages: false, percentageAdditional: 0.07, basePriceSection: 600 },
-  { id: '4', name: 'Habit Tracker', description: 'Registro de hábitos diarios.', isVariablePages: true, percentageAdditional: 0.08, basePriceSection: 700 },
-  { id: '5', name: 'Objetivos/Metas', description: 'Definición y seguimiento de objetivos.', isVariablePages: true, percentageAdditional: 0.06, basePriceSection: 550 },
-  { id: '6', name: 'Lista de Tareas', description: 'Listado de pendientes.', isVariablePages: true, percentageAdditional: 0.04, basePriceSection: 450 },
-  { id: '7', name: 'Fechas Importantes/Cumpleaños', description: 'Recordatorios de eventos.', isVariablePages: false, percentageAdditional: 0.03, basePriceSection: 400 },
-  { id: '8', name: 'Finanzas/Gastos', description: 'Registro de ingresos y egresos.', isVariablePages: true, percentageAdditional: 0.09, basePriceSection: 750 },
-  { id: '9', name: 'Mapas o Información Útil', description: 'Mapas y datos de interés.', isVariablePages: false, percentageAdditional: 0.02, basePriceSection: 350 },
+  // A las secciones con páginas variables, les ponemos un default.
+  { id: '1', name: 'Notas', description: 'Sección para tomar apuntes.', isVariablePages: true, pageCount: 20, percentageAdditional: 0.05, basePriceSection: 500 },
+  // A las secciones con páginas fijas, les definimos su total.
+  { id: '2', name: 'Agenda Semanal', description: 'Organizador semanal.', isVariablePages: false, pageCount: 54, percentageAdditional: 0.10, basePriceSection: 800 },
+  { id: '3', name: 'Calendario Mensual', description: 'Vista mensual del calendario.', isVariablePages: false, pageCount: 12, percentageAdditional: 0.07, basePriceSection: 600 },
+  { id: '4', name: 'Habit Tracker', description: 'Registro de hábitos diarios.', isVariablePages: true, pageCount: 10, percentageAdditional: 0.08, basePriceSection: 700 },
+  { id: '5', name: 'Objetivos/Metas', description: 'Definición y seguimiento de objetivos.', isVariablePages: true, pageCount: 10, percentageAdditional: 0.06, basePriceSection: 550 },
+  { id: '6', name: 'Lista de Tareas', description: 'Listado de pendientes.', isVariablePages: true, pageCount: 10, percentageAdditional: 0.04, basePriceSection: 450 },
+  { id: '7', name: 'Fechas Importantes/Cumpleaños', description: 'Recordatorios de eventos.', isVariablePages: false, pageCount: 4, percentageAdditional: 0.03, basePriceSection: 400 },
+  { id: '8', name: 'Finanzas/Gastos', description: 'Registro de ingresos y egresos.', isVariablePages: true, pageCount: 12, percentageAdditional: 0.09, basePriceSection: 750 },
+  { id: '9', name: 'Mapas o Información Útil', description: 'Mapas y datos de interés.', isVariablePages: false, pageCount: 2, percentageAdditional: 0.02, basePriceSection: 350 },
 ];
 
 export const DUMMY_TEMPLATES = {

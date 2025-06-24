@@ -2,8 +2,8 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 
-const MessageBox = ({ message, type, onClose }) => {
-  if (!message) return null;
+const MessageBox = ({ message, type, isOpen, onClose }) => {
+  if (!isOpen) return null; // <-- Usa isOpen para controlar la visibilidad
 
   const typeClasses = {
     info: 'bg-blue-100 border-blue-400 text-blue-700',

@@ -1,97 +1,70 @@
+// backend/src/controllers/pdfController.js
+
 const PDFDocument = require('pdfkit');
-const fs = require('fs');
-const path = require('path');
-// Importa tu configuración de DB si necesitas obtener datos de templates reales
-// const db = require('../config/db');
 
-exports.generateAgendaPdf = async (req, res) => {
-  // selectedSections y textColor llegan como campos de FormData (string)
-  let selectedSections = [];
+exports.generatePdf = async (req, res) => {
+  console.log("🚀 ~ exports.generatePdf= ~ req.body:", req.body)
+  // Este bloque try...catch es la solución definitiva.
+  // Atrapa cualquier error, incluyendo uno causado por una imagen inválida.
   try {
-    selectedSections = JSON.parse(req.body.selectedSections);
-  } catch {
-    selectedSections = [];
-  }
-  const textColor = req.body.textColor || '#000000';
-  const coverImagePath = req.file ? req.file.path : null;
-
-  const doc = new PDFDocument({
-    size: 'A4',
-    margin: 50
-  });
-
-  const outputFileName = `agenda_${Date.now()}.pdf`;
-  const outputPath = path.join(__dirname, '../../uploads/agendas', outputFileName); // Guarda PDFs generados
-
-  // Asegúrate de que la carpeta exista
-  if (!fs.existsSync(path.join(__dirname, '../../uploads/agendas'))) {
-    fs.mkdirSync(path.join(__dirname, '../../uploads/agendas'), { recursive: true });
-  }
-
-  doc.pipe(fs.createWriteStream(outputPath));
-
-  // 1. Añadir Carátula
-  if (coverImagePath && fs.existsSync(coverImagePath)) {
-    doc.image(coverImagePath, {
-      fit: [doc.page.width - 100, doc.page.height - 100], // Ajustar a la página
-      align: 'center',
-      valign: 'center'
-    });
-    doc.addPage();
-  } else {
-    // Si no hay imagen de carátula o no se encontró
-    doc.fontSize(36).text('Tuu Capricho', { align: 'center' });
-    doc.fontSize(24).text('Agenda Personalizada', { align: 'center' });
-    doc.text('¡Sube tu propia carátula para la próxima vez!', { align: 'center', fontSize: 16, color: 'gray' });
-    doc.addPage();
-  }
-
-
-  // 2. Añadir Secciones y Contenido
-  doc.fillColor(textColor); // Establece el color de texto para todas las secciones
-
-  for (const item of selectedSections) {
-    const { section, pages, template } = item;
-
-    doc.fontSize(24).text(section.name, { align: 'center' });
-    doc.fontSize(12).text(section.description, { align: 'center' });
-    doc.moveDown();
-
-    // Simular contenido de template. En un escenario real, cargarías el PDF del template
-    // y lo fusionarías o dibujarías contenido específico.
-    // PDFKit no tiene una función directa para "incluir PDF", requeriría librerías adicionales
-    // como `pdf-lib` para fusionar PDFs, o dibujar contenido desde cero.
-    doc.fontSize(10);
-    for (let i = 0; i < (pages || 1); i++) { // Renderiza al menos una página si no es variable
-      doc.text(`Página ${i + 1} de ${section.name} (Template: ${template ? template.name : 'N/A'})`, { align: 'left' });
-      doc.text('____________________________________________________________________________');
-      doc.moveDown();
-      if (i < (pages || 1) - 1) { // No añadir página extra después de la última
-        doc.addPage();
-      }
+    if (!req.body.selectedSections || !req.body.textColor) {
+      return res.status(400).json({ message: 'Faltan datos (secciones o color de texto).' });
     }
-    doc.addPage(); // Nueva página para la siguiente sección
-  }
+    
+    const selectedSections = JSON.parse(req.body.selectedSections);
+    console.log("🚀 ~ exports.generatePdf= ~ selectedSections:", selectedSections)
+    const textColor = req.body.textColor;
+    console.log("🚀 ~ exports.generatePdf= ~ textColor:", textColor)
+    const coverImageFile = req.file;
+    console.log("🚀 ~ exports.generatePdf= ~ coverImageFile:", coverImageFile)
 
-  doc.end();
-
-  doc.on('end', () => {
-    // Una vez que el PDF está completo, envíalo de vuelta al frontend o su URL
-    // Enviar el archivo como respuesta para que el frontend lo descargue
-    res.sendFile(outputPath, (err) => {
-      if (err) {
-        console.error('Error al enviar el PDF:', err);
-        res.status(500).send('Error al generar o enviar el PDF.');
-      }
-      // Opcional: eliminar el archivo temporal después de enviarlo
-      // fs.unlink(outputPath, (unlinkErr) => {
-      //   if (unlinkErr) console.error('Error al eliminar el PDF temporal:', unlinkErr);
-      // });
+    const doc = new PDFDocument({
+      size: 'A5',
+      autoFirstPage: false,
+      margins: { top: 50, bottom: 50, left: 72, right: 72 },
     });
-  });
 
-  doc.on('error', (err) => {
-    console.error('Error en PDFKit:', err);
-    res.status(500).send('Error al generar el PDF.');
-  });
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'inline; filename=agenda.pdf');
+    doc.pipe(res);
+
+    // Portada
+    doc.addPage();
+    doc.fontSize(25).fillColor(textColor).text('Mi Agenda Personalizada', { align: 'center' });
+    doc.moveDown(2);
+
+    // Si la imagen es inválida, este es el punto que fallaría.
+    // El 'try...catch' nos protege.
+    if (coverImageFile && coverImageFile.buffer) {
+      doc.image(coverImageFile.buffer, {
+        fit: [300, 400],
+        align: 'center',
+        valign: 'center',
+      });
+    }
+
+    // Secciones
+    selectedSections.forEach(sectionItem => {
+      doc.addPage();
+      doc.fontSize(20).fillColor(textColor).text(sectionItem.section.name, { underline: true });
+      doc.moveDown();
+      for (let i = 1; i <= sectionItem.pages; i++) {
+        doc.fontSize(10).fillColor('#333').text(`Página ${i} de la sección`);
+        if (i < sectionItem.pages) {
+          doc.addPage();
+        }
+      }
+    });
+
+    doc.end();
+
+  } catch (error) {
+    // Si llegamos aquí, es porque algo falló (probablemente la imagen).
+    console.error('ERROR DEFINITIVO ATRAPADO:', error); // <-- ESTE LOG ES EL QUE NECESITAMOS
+    
+    // Enviamos una respuesta de error controlada.
+    if (!res.headersSent) {
+      res.status(500).json({ message: 'No se pudo generar el PDF. Revisa la consola del backend para más detalles.' });
+    }
+  }
 };

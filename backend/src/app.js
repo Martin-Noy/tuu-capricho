@@ -38,14 +38,8 @@ app.use('/api/templates', templatesRoutes);
 app.use('/api/prices', pricesRoutes);
 // Solo aplica Multer en la ruta que lo necesita
 app.use('/api/pdf', (req, res, next) => {
-  upload.single('coverImage')(req, res, function (err) {
-    if (err instanceof multer.MulterError) {
-      return res.status(400).json({ error: 'Error al subir archivo.' });
-    } else if (err) {
-      return res.status(500).json({ error: 'Error interno de subida.' });
-    }
-    next();
-  });
+  console.log("🚀 ~ app.use ~ /api/pdf:", req.body)
+  
 }, pdfRoutes);
 app.use('/api/orders', ordersRoutes);
 
