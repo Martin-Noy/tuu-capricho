@@ -17,12 +17,12 @@ const theme = extendTheme({
   },
   styles: {
     global: {
+      // Mover esta línea al principio es la solución
+      '@import': "url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Montserrat:wght@700&display=swap')",
       body: {
-        bg: 'brand.cream',
+        bg: 'brand.bg',
         color: 'brand.text',
       },
-      // Importar fuentes de Google Fonts
-      '@import': "url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Montserrat:wght@700&display=swap')",
     },
   },
 });
