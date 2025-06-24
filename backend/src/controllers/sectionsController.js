@@ -12,6 +12,7 @@ exports.getAllSections = async (req, res) => {
 
 exports.createSection = async (req, res) => {
   const { nombre, descripcion, es_paginas_variables, porcentaje_adicional, precio_base_seccion } = req.body;
+  console.log(`🚀 ~ exports.createSection= ~ { nombre, descripcion, es_paginas_variables, porcentaje_adicional, precio_base_seccion }:`, { nombre, descripcion, es_paginas_variables, porcentaje_adicional, precio_base_seccion });
   try {
     const result = await db.query(
       'INSERT INTO Secciones (nombre, descripcion, es_paginas_variables, porcentaje_adicional, precio_base_seccion) VALUES ($1, $2, $3, $4, $5) RETURNING *',

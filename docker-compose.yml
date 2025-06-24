@@ -15,6 +15,7 @@ services:
       - "5432:5432" # Mapea el puerto del contenedor al host
     volumes:
       - db_data:/var/lib/postgresql/data # Persistencia de datos de la DB
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql 
     healthcheck: # Comprobación de salud para esperar a que la DB esté lista
       test: ["CMD-SHELL", "pg_isready -U tuu_capricho_user -d tuu_capricho_db"]
       interval: 5s
