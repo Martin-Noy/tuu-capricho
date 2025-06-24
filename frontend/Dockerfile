@@ -1,6 +1,6 @@
-FROM node:18-alpine
+FROM node:20-alpine
 
-WORKDIR /app
+WORKDIR /usr/src/app
 
 COPY package*.json ./
 
@@ -8,6 +8,8 @@ RUN npm install
 
 COPY . .
 
+# El puerto 5173 es el default de Vite
 EXPOSE 5173
 
-CMD ["npm", "run", "dev"]
+# El comando se pasa desde docker-compose.yml
+# CMD ["npm", "run", "dev"]

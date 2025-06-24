@@ -2,49 +2,60 @@ version: '3.8'
 
 services:
   db:
-    image: postgres:13-alpine
+    image: postgres:15-alpine
     container_name: tuu-capricho-db
+    restart: unless-stopped
     env_file:
-      - ./.env # Carga variables desde el archivo .env
+      - .env
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - ./postgres-data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
-      interval: 5s
+      interval: 10s
       timeout: 5s
       retries: 5
 
-  backend:
+  server:
     build:
       context: ./backend
       dockerfile: Dockerfile
     container_name: tuu-capricho-server
-    ports:
-      - "8000:8000"
+    restart: unless-stopped
     env_file:
-      - ./.env
+      - .env
+    ports:
+      - "${BACKEND_PORT}:${BACKEND_PORT}"
     volumes:
       - ./backend:/usr/src/app
+      - ./PDFs:/usr/src/app/PDFs
+      - ./generated-agendas:/usr/src/app/generated-agendas
       - /usr/src/app/node_modules
-      - ./pdfs:/usr/src/app/pdfs:ro # Monta la carpeta de PDFs (solo lectura)
     depends_on:
       db:
-        condition: service_healthy # Espera a que la DB esté saludable
+        condition: service_healthy
+    command: npm run dev
 
-  frontend:
+  client:
     build:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: tuu-capricho-client
+    restart: unless-stopped
     ports:
-      - "5173:5173"
+      - "${FRONTEND_PORT}:${FRONTEND_PORT}"
     volumes:
-      - ./frontend:/app
-      - /app/node_modules
+      - ./frontend:/usr/src/app
+      - /usr/src/app/node_modules
     depends_on:
-      - backend
+      - server
+    command: npm run dev
 
 volumes:
   postgres-data:

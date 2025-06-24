@@ -1,4 +1,3 @@
-// Archivo de configuración para Vite. Es importante para que funcione con Docker.
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
@@ -6,7 +5,17 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
-    host: '0.0.0.0', // Escucha en todas las interfaces, crucial para Docker
-    port: 5173,      // Asegura que el puerto sea el 5173
+    port: 5173,
+    // Habilitar el polling es necesario para que el hot-reloading funcione correctamente dentro de Docker
+    watch: {
+      usePolling: true,
+    },
+    proxy: {
+      '/api': {
+        target: 'http://server:8000', // Apunta al servicio 'server' de Docker en el puerto 8000
+        changeOrigin: true,
+        secure: false,
+      }
+    }
   }
 })
