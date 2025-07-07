@@ -1,12 +1,12 @@
 import { Routes, Route } from 'react-router-dom';
 import { Box, Heading } from '@chakra-ui/react';
-import AgendaBuilder from './components/AgendaBuilder';
 
 // Importa las páginas
 import Home from './pages/Home';
 import Products from './pages/Products';
 import ProductDetail from './pages/ProductDetail';
 import Cart from './pages/Cart';
+import CustomAgenda from './pages/CustomAgenda';
 
 function App() {
   return (
@@ -21,7 +21,7 @@ function App() {
         <Route path='/products' element={<Products />} />
         <Route path='/products/:id' element={<ProductDetail />} />
         <Route path='/cart' element={<Cart />} />
-        <Route path="/customAgenda" element={<AgendaBuilder />} />
+        <Route path="/customAgenda" element={<CustomAgenda />} />
       </Routes>
     </Box>
   );

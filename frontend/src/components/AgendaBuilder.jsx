@@ -22,6 +22,8 @@ const initialState = {
 };
 
 function agendaReducer(state, action) {
+  console.log("🚀 ~ agendaReducer ~ action:", JSON.stringify(action))
+  
   switch (action.type) {
     case 'FETCH_SUCCESS':
       return { ...state, availableSections: action.payload, loading: false };

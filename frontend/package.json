@@ -14,10 +14,13 @@
     "@chakra-ui/react": "^2.8.2",
     "@emotion/react": "^11.11.4",
     "@emotion/styled": "^11.11.5",
+    "@react-pdf-viewer/core": "^3.12.0",
+    "@react-pdf-viewer/default-layout": "^3.12.0",
     "axios": "^1.7.2",
     "framer-motion": "^11.2.10",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-pdf": "^10.0.1",
     "react-router-dom": "^6.23.1"
   },
   "devDependencies": {
