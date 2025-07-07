@@ -10,10 +10,13 @@ import Order from '../models/order.js';
  * @returns {Promise<string>} El nombre del archivo PDF generado.
  */
 export async function assemblePdf(agendaItems) {
+  console.log("🚀 ~ assemblePdf ~ agendaItems:", agendaItems)
   const finalPdfDoc = await PDFDocument.create();
 
   for (const item of agendaItems) {
+    console.log("🚀 ~ assemblePdf ~ item:", item)
     const templatePath = path.resolve(process.cwd(), 'PDFs', item.section, item.template);
+    console.log("🚀 ~ assemblePdf ~ templatePath:", templatePath)
 
     // Validar que la ruta no salga del directorio PDFs (Seguridad: Path Traversal)
     const safeBaseDir = path.resolve(process.cwd(), 'PDFs');
@@ -23,12 +26,9 @@ export async function assemblePdf(agendaItems) {
 
     const templateBytes = await fs.readFile(templatePath);
     const templateDoc = await PDFDocument.load(templateBytes);
-    
-    // Asumimos que cada plantilla es un documento de una sola página que debe ser repetida.
-    // Copiamos la primera página (índice 0) de la plantilla.
-    const [templatePage] = await finalPdfDoc.copyPages(templateDoc, [0]);
 
     for (let i = 0; i < item.pages; i++) {
+      const [templatePage] = await finalPdfDoc.copyPages(templateDoc, [0]);
       finalPdfDoc.addPage(templatePage);
     }
   }

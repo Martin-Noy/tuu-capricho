@@ -13,7 +13,8 @@ export const getAvailableSections = async (req, res) => {
 
 export const createPersonalizedAgenda = async (req, res) => {
   const { agendaItems, customerDetails } = req.body;
-
+  console.log("🚀 ~ createPersonalizedAgenda ~ agendaItems:", agendaItems)
+  console.log("🚀 ~ createPersonalizedAgenda ~ customerDetails:", customerDetails)
   if (!agendaItems || !customerDetails || !Array.isArray(agendaItems)) {
     return res.status(400).json({ message: 'Invalid request body.' });
   }
@@ -37,7 +38,7 @@ export const createPersonalizedAgenda = async (req, res) => {
     const newOrder = await saveOrder(orderData);
     
     // 3. Enviar respuesta exitosa
-    res.status(201).json({ 
+    res.status(200).json({ 
       message: 'Agenda created and order placed successfully!',
       orderId: newOrder.id,
       fileName: pdfFilename,
