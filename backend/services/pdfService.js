@@ -9,7 +9,7 @@ import Order from '../models/order.js';
  * @param {Array<{section: string, template: string, pages: number}>} agendaItems
  * @returns {Promise<string>} El nombre del archivo PDF generado.
  */
-export async function assemblePdf(agendaItems) {
+export async function assemblePdf(agendaItems, customerDetails) {
   console.log("🚀 ~ assemblePdf ~ agendaItems:", agendaItems)
   const finalPdfDoc = await PDFDocument.create();
 
@@ -37,7 +37,7 @@ export async function assemblePdf(agendaItems) {
   const outputDir = path.resolve(process.cwd(), 'generated-agendas');
   await fs.mkdir(outputDir, { recursive: true });
 
-  const filename = `agenda-${uuidv4()}.pdf`;
+  const filename = `agenda-${customerDetails.name.replace(/\s+/g, '-')}-${customerDetails.email}.pdf`;
   const outputPath = path.join(outputDir, filename);
   await fs.writeFile(outputPath, pdfBytes);
 

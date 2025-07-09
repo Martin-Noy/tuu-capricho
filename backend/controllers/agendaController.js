@@ -27,7 +27,7 @@ export const createPersonalizedAgenda = async (req, res) => {
 
   try {
     // 1. Ensamblar el PDF
-    const pdfFilename = await assemblePdf(agendaItems);
+    const pdfFilename = await assemblePdf(agendaItems, customerDetails);
 
     // 2. Guardar el pedido en la base de datos
     const orderData = {
