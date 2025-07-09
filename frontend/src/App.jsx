@@ -23,6 +23,7 @@ function App() {
         <Route path='/cart' element={<Cart />} />
         <Route path="/customAgenda" element={<CustomAgenda />} />
       </Routes>
+      <a href="https://www.flaticon.com/free-icons/agenda" title="agenda icons">Agenda icons created by Freepik - Flaticon</a>
     </Box>
   );
 }
