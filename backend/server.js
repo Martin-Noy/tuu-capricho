@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import sequelize from './config/database.js';
 import agendaRoutes from './routes/agendaRoutes.js';
 import Order from './models/order.js';
+import path from 'path';
 
 dotenv.config();
 
@@ -16,6 +17,7 @@ app.use(express.json());
 
 // Routes
 app.use('/api', agendaRoutes);
+app.use('/PDFs', express.static(path.resolve(process.cwd(), 'PDFs')));
 
 // Database connection
 const connectToDb = async () => {

@@ -156,11 +156,11 @@ const AgendaBuilder = () => {
       <VStack spacing={8}>
         <Heading as="h2" size="lg">Personaliza tu Agenda</Heading>
         <SimpleGrid columns={{ base: 1, md: 2 }} spacing={10} w="100%">
-          <Box>
+          <Box flex={2} minW={{ base: "100%", md: "480px", lg: "600px" }} maxW="700px" w="100%">
             <Heading as="h3" size="md" mb={4}>1. Elige tus Secciones</Heading>
             <SectionPicker sections={state.availableSections} dispatch={dispatch} />
           </Box>
-          <Box>
+          <Box flex={1}>
              <Heading as="h3" size="md" mb={4}>2. Revisa tu Capricho</Heading>
             <AgendaPreview
               items={state.items}
