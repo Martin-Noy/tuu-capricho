@@ -1,62 +1,61 @@
-# docker-compose.yml
-# Ubicar este archivo en la raíz del repositorio (donde están las carpetas frontend y backend)
-
 version: '3.8'
 
 services:
-  # Servicio de la base de datos PostgreSQL
   db:
-    image: postgres:13-alpine # Usa una imagen de PostgreSQL estable y ligera
+    image: postgres:15-alpine
+    container_name: tuu-capricho-db
+    restart: unless-stopped
+    env_file:
+      - .env
     environment:
-      POSTGRES_DB: tuu_capricho_db
-      POSTGRES_USER: tuu_capricho_user
-      POSTGRES_PASSWORD: tu_contraseña_segura_docker # ¡CAMBIA ESTO!
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     ports:
-      - "5432:5432" # Mapea el puerto del contenedor al host
+      - "5432:5432"
     volumes:
-      - db_data:/var/lib/postgresql/data # Persistencia de datos de la DB
-      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql 
-    healthcheck: # Comprobación de salud para esperar a que la DB esté lista
-      test: ["CMD-SHELL", "pg_isready -U tuu_capricho_user -d tuu_capricho_db"]
-      interval: 5s
+      - ./postgres-data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
       timeout: 5s
       retries: 5
-    networks:
-      - app-network
 
-  # Servicio del Backend (Node.js/Express)
-  backend:
+  server:
     build:
-      context: ./backend # Ruta al Dockerfile del backend
-      dockerfile: Dockerfile # Nombre del Dockerfile en el contexto
-    ports:
-      - "8080:8080" # Mapea el puerto del contenedor al host
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: tuu-capricho-server
+    restart: unless-stopped
     env_file:
-      - ./backend/.env # Carga las variables de entorno desde un archivo .env
-    volumes:
-      - ./backend/src:/usr/src/app/src # Monta el código fuente en el contenedor
-    depends_on:
-      - db # El backend depende del servicio de la DB
-    networks:
-      - app-network
-
-  # Servicio del Frontend (React.js)
-  frontend:
-    build:
-      context: ./frontend # Ruta al Dockerfile del frontend
-      dockerfile: Dockerfile # Nombre del Dockerfile en el contexto
+      - .env
     ports:
-      - "80:80" # Expone el puerto 80 del contenedor al puerto 80 del host
-    environment:
-      REACT_APP_API_URL: http://localhost/api # Nginx en el frontend proxeará a /api, que apunta al backend
+      - "${BACKEND_PORT}:${BACKEND_PORT}"
+    volumes:
+      - ./backend:/usr/src/app
+      - ./PDFs:/usr/src/app/PDFs
+      - ./generated-agendas:/usr/src/app/generated-agendas
+      - /usr/src/app/node_modules
     depends_on:
-      - backend # El frontend depende del backend (aunque Nginx es el que hace la llamada)
-    networks:
-      - app-network
+      db:
+        condition: service_healthy
+    command: npm run dev
+
+  client:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: tuu-capricho-client
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT}:${FRONTEND_PORT}"
+    volumes:
+      - ./frontend:/usr/src/app
+      - /usr/src/app/node_modules
+    depends_on:
+      - server
+    command: npm run dev
 
 volumes:
-  db_data: # Define el volumen para los datos de PostgreSQL
-
-networks:
-  app-network:
-    driver: bridge
+  postgres-data:
