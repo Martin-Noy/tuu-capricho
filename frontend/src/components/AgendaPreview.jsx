@@ -16,7 +16,7 @@ const AgendaPreview = ({ items, totalPages, maxPages, dispatch }) => {
     <Box p={4} borderWidth={1} borderRadius="lg" bg="white" borderColor="gray.200" shadow="none">
       <VStack align="stretch" spacing={4}>
         <HStack justify="space-between">
-          <Heading size="sm">Total de Páginas</Heading>
+          <Heading size="sm">Total de Carillas</Heading>
           <Text fontWeight="bold" fontSize="lg" color={totalPages === maxPages ? 'green.500' : 'gray.700'}>
             {totalPages} / {maxPages}
           </Text>
