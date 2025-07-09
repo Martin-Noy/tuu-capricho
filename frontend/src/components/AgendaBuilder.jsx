@@ -1,9 +1,15 @@
+// Archivo: AgendaBuilder.jsx
+
 import { useEffect, useReducer } from 'react';
-import { Box, Container, Heading, VStack, Text, Spinner, Alert, AlertIcon, SimpleGrid, useToast } from '@chakra-ui/react';
+import { Box, Container, Heading, VStack, Text, Spinner, Alert, AlertIcon, SimpleGrid, useToast, Flex } from '@chakra-ui/react';
 import axios from 'axios';
 import SectionPicker from './SectionPicker';
 import AgendaPreview from './AgendaPreview';
 import OrderForm from './OrderForm';
+
+// ... (El reducer y el estado inicial no cambian, así que los omito por brevedad)
+
+// ----- COPIA Y PEGA EL CÓDIGO DEL REDUCER Y ESTADO INICIAL AQUÍ -----
 
 const MAX_PAGES = 80;
 
@@ -86,6 +92,7 @@ const AgendaBuilder = () => {
   const toast = useToast();
 
   useEffect(() => {
+    // ... (El useEffect no cambia)
     const fetchSections = async () => {
       try {
         const response = await axios.get('/api/sections');
@@ -99,6 +106,7 @@ const AgendaBuilder = () => {
   }, []);
 
   const handleOrderSubmit = async (customerDetails) => {
+    // ... (El handleOrderSubmit no cambia)
     dispatch({ type: 'SUBMIT_ORDER_START' });
     try {
         const payload = {
@@ -127,6 +135,7 @@ const AgendaBuilder = () => {
     }
   };
 
+  // ... (Las vistas de loading, error y orderPlaced no cambian)
   if (state.loading) {
     return <Spinner size="xl" />;
   }
@@ -151,34 +160,67 @@ const AgendaBuilder = () => {
     )
   }
 
+  // ---- CAMBIOS PRINCIPALES EN EL RETURN ----
   return (
-    <Container maxW="container.xl" py={10}>
-      <VStack spacing={8}>
-        <Heading as="h2" size="lg">Personaliza tu Agenda</Heading>
-        <SimpleGrid columns={{ base: 1, md: 2 }} spacing={10} w="100%">
-          <Box flex={2} minW={{ base: "100%", md: "480px", lg: "600px" }} maxW="700px" w="100%">
-            <Heading as="h3" size="md" mb={4}>1. Elige tus Secciones</Heading>
+    <Box bgGradient="linear(to-br, pink.50, purple.50)" py={{ base: 8, md: 12 }}>
+      <Container maxW="container.xl">
+        <VStack spacing={4} mb={10}>
+          <Heading as="h1" size="xl" color="gray.700">Personaliza tu Agenda</Heading>
+          <Text color="gray.600">Sigue los 3 pasos para crear la agenda de tus sueños.</Text>
+        </VStack>
+        
+        <SimpleGrid columns={{ base: 1, lg: 3 }} spacing={{ base: 8, md: 10 }} w="100%">
+          
+          {/* Columna Izquierda: Secciones */}
+          <Box gridColumn={{ base: 'auto', lg: 'span 2' }} bg="white" p={6} borderRadius="xl" boxShadow="lg">
+            <StepHeading number="1" text="Elige tus Secciones" />
             <SectionPicker sections={state.availableSections} dispatch={dispatch} />
           </Box>
-          <Box flex={1}>
-             <Heading as="h3" size="md" mb={4}>2. Revisa tu Capricho</Heading>
-            <AgendaPreview
-              items={state.items}
-              totalPages={state.totalPages}
-              maxPages={MAX_PAGES}
-              dispatch={dispatch}
-            />
-             <Heading as="h3" size="md" mt={8} mb={4}>3. Finaliza tu Pedido</Heading>
-             <OrderForm 
-                isComplete={state.totalPages === MAX_PAGES} 
-                onSubmit={handleOrderSubmit}
-                isLoading={state.isSubmitting}
-            />
-          </Box>
+
+          {/* Columna Derecha: Preview y Formulario */}
+          <VStack spacing={8} bg="white" p={6} borderRadius="xl" boxShadow="lg" align="stretch">
+             <Box>
+                <StepHeading number="2" text="Revisa tu Capricho" />
+                <AgendaPreview
+                  items={state.items}
+                  totalPages={state.totalPages}
+                  maxPages={MAX_PAGES}
+                  dispatch={dispatch}
+                />
+             </Box>
+             <Box>
+                <StepHeading number="3" text="Finaliza tu Pedido" />
+                <OrderForm 
+                    isComplete={state.totalPages === MAX_PAGES} 
+                    onSubmit={handleOrderSubmit}
+                    isLoading={state.isSubmitting}
+                />
+             </Box>
+          </VStack>
         </SimpleGrid>
-      </VStack>
-    </Container>
+      </Container>
+    </Box>
   );
 };
+
+// Componente auxiliar para los títulos de los pasos
+const StepHeading = ({ number, text }) => (
+  <Flex align="center" mb={4}>
+    <Flex
+      bg="pink.500"
+      color="white"
+      borderRadius="full"
+      w="30px"
+      h="30px"
+      align="center"
+      justify="center"
+      fontWeight="bold"
+      mr={3}
+    >
+      {number}
+    </Flex>
+    <Heading as="h3" size="md">{text}</Heading>
+  </Flex>
+);
 
 export default AgendaBuilder;
