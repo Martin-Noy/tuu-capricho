@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import sequelize from './config/database.js';
 import agendaRoutes from './routes/agendaRoutes.js';
 import Order from './models/order.js';
+import Product from './models/product.js';
 import path from 'path';
 
 dotenv.config();
@@ -27,7 +28,8 @@ const connectToDb = async () => {
     
     // Sincronizar modelos con la base de datos
     await Order.sync({ alter: true }); // 'alter: true' puede modificar la tabla si el modelo cambia
-    console.log("The 'pedidos' table has been successfully synced.");
+    await Product.sync({ alter: true }); // Sincronizar también el modelo Product
+    console.log("The 'pedidos' and 'productos' tables have been successfully synced.");
 
     app.listen(PORT, () => {
       console.log(`Backend server is running on http://localhost:${PORT}`);

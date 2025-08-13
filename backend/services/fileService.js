@@ -6,7 +6,10 @@ import path from 'path';
  * @returns {Promise<Array<{name: string, templates: Array<{name: string, previewUrl: string}>>}>}
  */
 export async function getAgendaStructure() {
-  const pdfsRoot = path.resolve(process.cwd(), 'PDFs');
+  // Corregimos la ruta para que apunte a la carpeta PDFs montada
+  const pdfsRoot = '/usr/src/app/PDFs';
+  console.log('📁 Scanning PDFs directory:', pdfsRoot);
+  
   const sections = [];
 
   try {
@@ -16,6 +19,8 @@ export async function getAgendaStructure() {
       if (dirent.isDirectory()) {
         const sectionName = dirent.name;
         const sectionPath = path.join(pdfsRoot, sectionName);
+        console.log(`📂 Processing section: ${sectionName} at ${sectionPath}`);
+        
         const templates = [];
         const sectionDir = await opendir(sectionPath);
 
@@ -23,18 +28,22 @@ export async function getAgendaStructure() {
           // Cada archivo .pdf es una "Plantilla"
           if (templateFile.isFile() && path.extname(templateFile.name).toLowerCase() === '.pdf') {
             templates.push(templateFile.name);
+            console.log(`📄 Found template: ${templateFile.name}`);
           }
         }
 
         // Solo añadir la sección si contiene plantillas válidas
         if (templates.length > 0) {
           sections.push({ name: sectionName, templates });
+          console.log(`✅ Section ${sectionName} added with ${templates.length} templates`);
         }
       }
     }
+    
+    console.log('🎯 Final sections structure:', sections);
     return sections;
   } catch (error) {
-    console.error('Error scanning PDF directory:', error);
+    console.error('❌ Error scanning PDF directory:', error);
     // Devolver un array vacío o lanzar un error para que el controlador lo maneje
     return [];
   }

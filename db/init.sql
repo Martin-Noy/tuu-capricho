@@ -1,12 +1,26 @@
 -- Este script se ejecuta al iniciar el contenedor de la base de datos por primera vez.
--- Crea la tabla 'pedidos' si no existe.
+-- Crea las tablas 'pedidos' y 'productos' si no existen.
 
+-- Tabla de pedidos
 CREATE TABLE IF NOT EXISTS pedidos (
     id SERIAL PRIMARY KEY,
     customer_name VARCHAR(255) NOT NULL,
     customer_email VARCHAR(255) NOT NULL,
     generated_pdf_filename VARCHAR(255),
     agenda_definition JSONB, -- Usar JSONB para un almacenamiento y consulta eficiente de JSON
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Tabla de productos
+CREATE TABLE IF NOT EXISTS productos (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    photos TEXT[], -- Array de URLs o paths de fotos
+    base_price DECIMAL(10,2) NOT NULL,
+    percentage DECIMAL(5,2) NOT NULL,
+    description TEXT,
+    stock INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -20,16 +34,23 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Dropear el trigger si ya existe para evitar errores en reinicios
+-- Dropear los triggers si ya existen para evitar errores en reinicios
 DROP TRIGGER IF EXISTS set_timestamp ON pedidos;
+DROP TRIGGER IF EXISTS set_timestamp ON productos;
 
+-- Crear triggers para ambas tablas
 CREATE TRIGGER set_timestamp
 BEFORE UPDATE ON pedidos
+FOR EACH ROW
+EXECUTE PROCEDURE trigger_set_timestamp();
+
+CREATE TRIGGER set_timestamp
+BEFORE UPDATE ON productos
 FOR EACH ROW
 EXECUTE PROCEDURE trigger_set_timestamp();
 
 -- Mensaje de log para confirmar la ejecución
 DO $$
 BEGIN
-  RAISE NOTICE 'Tabla "pedidos" y trigger "set_timestamp" creados/verificados.';
+  RAISE NOTICE 'Tablas "pedidos" y "productos" y triggers "set_timestamp" creados/verificados.';
 END $$;

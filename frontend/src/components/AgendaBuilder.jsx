@@ -1,36 +1,38 @@
-// Archivo: AgendaBuilder.jsx
+// Archivo: AgendaBuilder.jsx (Modificado)
 
 import { useEffect, useReducer } from 'react';
 import { Box, Container, Heading, VStack, Text, Spinner, Alert, AlertIcon, SimpleGrid, useToast, Flex } from '@chakra-ui/react';
 import axios from 'axios';
+//---> 1. Importamos el nuevo componente
+import CoverDesigner from './CoverDesigner';
 import SectionPicker from './SectionPicker';
 import AgendaPreview from './AgendaPreview';
 import OrderForm from './OrderForm';
 
-// ... (El reducer y el estado inicial no cambian, así que los omito por brevedad)
-
-// ----- COPIA Y PEGA EL CÓDIGO DEL REDUCER Y ESTADO INICIAL AQUÍ -----
-
 const MAX_PAGES = 80;
 
 const initialState = {
-  // Estructura de secciones y plantillas obtenida de la API
   availableSections: [],
-  // Items que el usuario ha añadido a su agenda
-  items: [], // Array de { id, section, template, pages }
+  items: [],
   totalPages: 0,
-  // Estado de la carga de datos
   loading: true,
   error: null,
-  // Estado del pedido
   orderPlaced: false,
   isSubmitting: false,
+  //---> 2. Añadimos el estado para la portada
+  coverDetails: {
+    title: '',
+    imageUrl: '',
+  },
 };
 
 function agendaReducer(state, action) {
-  console.log("🚀 ~ agendaReducer ~ action:", JSON.stringify(action))
-  
+  //---> 3. Añadimos un nuevo "case" para manejar la actualización de la portada
   switch (action.type) {
+    case 'UPDATE_COVER':
+      return { ...state, coverDetails: action.payload };
+    
+    // (El resto de los cases no cambian...)
     case 'FETCH_SUCCESS':
       return { ...state, availableSections: action.payload, loading: false };
     case 'FETCH_ERROR':
@@ -38,13 +40,13 @@ function agendaReducer(state, action) {
     case 'ADD_ITEM': {
       const { section, template } = action.payload;
       const newItem = {
-        id: new Date().getTime(), // ID simple basado en el tiempo
+        id: new Date().getTime(),
         section,
         template,
-        pages: 1, // Siempre se empieza con 1 página
+        pages: 1,
       };
       const newTotalPages = state.totalPages + 1;
-      if (newTotalPages > MAX_PAGES) return state; // No permitir añadir más de 80
+      if (newTotalPages > MAX_PAGES) return state;
       return {
         ...state,
         items: [...state.items, newItem],
@@ -65,9 +67,8 @@ function agendaReducer(state, action) {
       const newItems = state.items.map(item => {
         if (item.id === action.payload.id) {
           const pageDiff = action.payload.pages - item.pages;
-          // No permitir exceder el total de páginas
           if (state.totalPages + pageDiff > MAX_PAGES) {
-            return item; // No hacer cambios si se excede
+            return item;
           }
           newTotalPages += pageDiff;
           return { ...item, pages: action.payload.pages };
@@ -92,27 +93,28 @@ const AgendaBuilder = () => {
   const toast = useToast();
 
   useEffect(() => {
-    // ... (El useEffect no cambia)
     const fetchSections = async () => {
       try {
         const response = await axios.get('/api/sections');
         dispatch({ type: 'FETCH_SUCCESS', payload: response.data });
       } catch (err) {
         dispatch({ type: 'FETCH_ERROR', payload: 'No se pudieron cargar las secciones.' });
-        console.error(err);
       }
     };
     fetchSections();
   }, []);
 
   const handleOrderSubmit = async (customerDetails) => {
-    // ... (El handleOrderSubmit no cambia)
     dispatch({ type: 'SUBMIT_ORDER_START' });
     try {
+        // Corregimos el payload para que coincida con lo que espera el backend
         const payload = {
-            agendaItems: state.items,
+            coverDetails: state.coverDetails,
+            items: state.items, // Cambiamos agendaItems por items
             customerDetails
         };
+        
+        console.log('🚀 Sending payload to backend:', payload);
         await axios.post('/api/generate-agenda', payload);
         dispatch({ type: 'SUBMIT_ORDER_SUCCESS' });
         toast({
@@ -124,10 +126,10 @@ const AgendaBuilder = () => {
         });
     } catch (error) {
         dispatch({ type: 'SUBMIT_ORDER_FAILURE' });
-        console.error("Error al enviar el pedido:", error);
+        console.error('❌ Error submitting order:', error.response?.data);
         toast({
             title: 'Error en el pedido.',
-            description: error.response?.data?.message || "No pudimos procesar tu pedido. Inténtalo de nuevo.",
+            description: error.response?.data?.message || "No pudimos procesar tu pedido.",
             status: 'error',
             duration: 9000,
             isClosable: true,
@@ -135,61 +137,62 @@ const AgendaBuilder = () => {
     }
   };
 
-  // ... (Las vistas de loading, error y orderPlaced no cambian)
-  if (state.loading) {
-    return <Spinner size="xl" />;
-  }
-
-  if (state.error) {
-    return (
-      <Alert status="error">
-        <AlertIcon />
-        {state.error}
-      </Alert>
-    );
-  }
-
-  if(state.orderPlaced) {
-    return (
+  if (state.loading) return <Spinner size="xl" />;
+  if (state.error) return <Alert status="error"><AlertIcon />{state.error}</Alert>;
+  if (state.orderPlaced) {
+      return (
         <Container maxW="container.md" centerContent py={10}>
             <VStack spacing={8}>
                 <Heading>🎉 ¡Gracias por tu pedido! 🎉</Heading>
-                <Text fontSize="lg">Tu agenda personalizada se está procesando. Recibirás una confirmación por correo.</Text>
+                <Text fontSize="lg">Tu agenda personalizada está en camino. Revisa tu correo.</Text>
             </VStack>
         </Container>
-    )
+      )
   }
 
-  // ---- CAMBIOS PRINCIPALES EN EL RETURN ----
+  //---> 5. Reestructuramos el layout para añadir el nuevo paso
   return (
     <Box bgGradient="linear(to-br, pink.50, purple.50)" py={{ base: 8, md: 12 }}>
       <Container maxW="container.xl">
         <VStack spacing={4} mb={10}>
           <Heading as="h1" size="xl" color="gray.700">Personaliza tu Agenda</Heading>
-          <Text color="gray.600">Sigue los 3 pasos para crear la agenda de tus sueños.</Text>
+          <Text color="gray.600">Sigue los pasos para crear la agenda de tus sueños.</Text>
         </VStack>
         
         <SimpleGrid columns={{ base: 1, lg: 3 }} spacing={{ base: 8, md: 10 }} w="100%">
           
-          {/* Columna Izquierda: Secciones */}
-          <Box gridColumn={{ base: 'auto', lg: 'span 2' }} bg="white" p={6} borderRadius="xl" boxShadow="lg">
-            <StepHeading number="1" text="Elige tus Secciones" />
-            <SectionPicker sections={state.availableSections} dispatch={dispatch} />
-          </Box>
+          {/* Columna Izquierda: Ahora tiene el diseñador de tapa Y el selector de secciones */}
+          <VStack gridColumn={{ base: 'auto', lg: 'span 2' }} spacing={8} align="stretch">
+            {/* Paso 1: Diseñador de Tapa */}
+            <Box bg="white" p={6} borderRadius="xl" boxShadow="lg">
+              <StepHeading number="1" text="Diseña tu Tapa" />
+              <CoverDesigner coverDetails={state.coverDetails} dispatch={dispatch} />
+            </Box>
 
-          {/* Columna Derecha: Preview y Formulario */}
-          <VStack spacing={8} bg="white" p={6} borderRadius="xl" boxShadow="lg" align="stretch">
+            {/* Paso 2: Selector de Secciones */}
+            <Box bg="white" p={6} borderRadius="xl" boxShadow="lg">
+              <StepHeading number="2" text="Elige tus Secciones" />
+              <SectionPicker sections={state.availableSections} dispatch={dispatch} />
+            </Box>
+          </VStack>
+
+          {/* Columna Derecha: Sigue teniendo la vista previa y el formulario */}
+          <VStack spacing={8} bg="white" p={6} borderRadius="xl" boxShadow="lg" align="stretch" position="sticky" top="2rem">
              <Box>
-                <StepHeading number="2" text="Revisa tu Capricho" />
+                {/* Ahora este es el paso 3 */}
+                <StepHeading number="3" text="Revisa tu Capricho" />
                 <AgendaPreview
                   items={state.items}
                   totalPages={state.totalPages}
                   maxPages={MAX_PAGES}
                   dispatch={dispatch}
+                  // Pasamos los detalles de la agenda para la previsualización
+                  fullAgendaDetails={{ coverDetails: state.coverDetails, items: state.items }}
                 />
              </Box>
              <Box>
-                <StepHeading number="3" text="Finaliza tu Pedido" />
+                {/* Y este el paso 4 */}
+                <StepHeading number="4" text="Finaliza tu Pedido" />
                 <OrderForm 
                     isComplete={state.totalPages === MAX_PAGES} 
                     onSubmit={handleOrderSubmit}
@@ -203,20 +206,10 @@ const AgendaBuilder = () => {
   );
 };
 
-// Componente auxiliar para los títulos de los pasos
+// El componente de encabezado de paso no cambia
 const StepHeading = ({ number, text }) => (
   <Flex align="center" mb={4}>
-    <Flex
-      bg="pink.500"
-      color="white"
-      borderRadius="full"
-      w="30px"
-      h="30px"
-      align="center"
-      justify="center"
-      fontWeight="bold"
-      mr={3}
-    >
+    <Flex bg="pink.500" color="white" borderRadius="full" w="30px" h="30px" align="center" justify="center" fontWeight="bold" mr={3}>
       {number}
     </Flex>
     <Heading as="h3" size="md">{text}</Heading>

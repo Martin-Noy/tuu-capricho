@@ -24,12 +24,21 @@ const TemplateSelector = ({ sectionName, templates, dispatch }) => {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
 
   const handleAdd = (template) => {
-    dispatch({ type: 'ADD_ITEM', payload: { section: sectionName, template } });
+    // Corregimos para pasar solo el nombre del archivo PDF
+    const templateName = template.name || template;
+    const pdfFileName = typeof templateName === 'string' ? templateName : `${templateName}.pdf`;
+    
+    console.log('🚀 Adding template:', { section: sectionName, template: pdfFileName });
+    dispatch({ type: 'ADD_ITEM', payload: { section: sectionName, template: pdfFileName } });
     onClose();
   };
 
   const handlePreview = (template) => {
-    setSelectedTemplate(template);
+    // Corregimos para ser consistente con handleAdd
+    const templateName = template.name || template;
+    const pdfFileName = typeof templateName === 'string' ? templateName : `${templateName}.pdf`;
+    
+    setSelectedTemplate({ name: pdfFileName, section: sectionName });
     onOpen();
   };
 
@@ -39,12 +48,13 @@ const TemplateSelector = ({ sectionName, templates, dispatch }) => {
     <>
       <SimpleGrid columns={{ base: 1, sm: 2, md: 3 }} spacing={6} w="full">
         {templates.map((template) => {
+          // Corregimos para que siempre incluya la extensión .pdf
           const templateName = template.name
             ? template.name
-            : (typeof template === 'string' ? template.replace('.pdf', '') : '');
+            : (typeof template === 'string' ? template : '');
 
           //---> CAMBIO 1: Añadimos #toolbar=0 a la URL para ocultar la barra de herramientas del PDF.
-          const pdfUrl = `${backendUrl}/PDFs/${sectionName}/${templateName}.pdf#toolbar=0`;
+          const pdfUrl = `${backendUrl}/PDFs/${sectionName}/${templateName}#toolbar=0`;
 
           return (
             <VStack
@@ -104,14 +114,14 @@ const TemplateSelector = ({ sectionName, templates, dispatch }) => {
               </Box>
 
               <Text fontWeight="bold" fontSize="md" textAlign="center" noOfLines={1}>
-                {templateName}
+                {templateName.replace('.pdf', '')}
               </Text>
 
               <Button
                 size="sm"
                 colorScheme="pink"
                 variant="solid"
-                onClick={() => handleAdd(template)}
+                onClick={() => handleAdd({ name: templateName, section: sectionName })}
                 leftIcon={<AddIcon />}
                 fontWeight="bold"
                 w="full"
@@ -139,7 +149,7 @@ const TemplateSelector = ({ sectionName, templates, dispatch }) => {
               >
                 <iframe
                   // URL con #toolbar=0
-                  src={`${backendUrl}/PDFs/${selectedTemplate.section}/${selectedTemplate.name}.pdf#toolbar=0`}
+                  src={`${backendUrl}/PDFs/${selectedTemplate.section}/${selectedTemplate.name}#toolbar=0`}
                   title={`Preview of ${selectedTemplate.name}`}
                   width="100%"
                   height="100%"

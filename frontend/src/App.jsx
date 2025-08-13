@@ -7,6 +7,7 @@ import Products from './pages/Products';
 import ProductDetail from './pages/ProductDetail';
 import Cart from './pages/Cart';
 import CustomAgenda from './pages/CustomAgenda';
+import Contact from './pages/Contact';
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
         <Route path='/products/:id' element={<ProductDetail />} />
         <Route path='/cart' element={<Cart />} />
         <Route path="/customAgenda" element={<CustomAgenda />} />
+        <Route path="/contact" element={<Contact />} />
       </Routes>
       <a href="https://www.flaticon.com/free-icons/agenda" title="agenda icons">Agenda icons created by Freepik - Flaticon</a>
     </Box>
