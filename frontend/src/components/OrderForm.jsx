@@ -1,16 +1,24 @@
-import { useState } from 'react';
-import { VStack, FormControl, FormLabel, Input, Button, Text, Box } from '@chakra-ui/react';
+import { useState, useEffect } from 'react';
+import { useUser } from '../context/UserContext.jsx';
+import { VStack, FormControl, FormLabel, Input, Button, Text, Box, RadioGroup, Radio } from '@chakra-ui/react';
 
 const OrderForm = ({ isComplete, onSubmit, isLoading }) => {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const { user } = useUser();
+  const [name, setName] = useState(user?.name || '');
+  const [email, setEmail] = useState(user?.email || '');
+  const [agendaType, setAgendaType] = useState('fisica');
+
+  useEffect(() => {
+    setName(user?.name || '');
+    setEmail(user?.email || '');
+  }, [user]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!name || !email) {
       return;
     }
-    onSubmit({ name, email });
+    onSubmit({ name, email, agendaType });
   };
 
   return (
@@ -32,6 +40,13 @@ const OrderForm = ({ isComplete, onSubmit, isLoading }) => {
               value={email} 
               onChange={(e) => setEmail(e.target.value)}
             />
+          </FormControl>
+          <FormControl isRequired isDisabled={!isComplete}>
+            <FormLabel>Tipo de agenda</FormLabel>
+            <RadioGroup onChange={setAgendaType} value={agendaType}>
+              <Radio value="fisica">Física (impresión y envío físico)</Radio>
+              <Radio value="digital">Digital (PDF por email)</Radio>
+            </RadioGroup>
           </FormControl>
           
           {/* ---- ESTA ES LA PARTE CORREGIDA ---- */}

@@ -1,3 +1,4 @@
+//TO-DO: Mejorar validaciones, agregar endpoint para historial de agendas y exportar PDF personalizado.
 // Archivo: agendaController.js (Modificado)
 
 import { getAgendaStructure } from '../services/fileService.js';

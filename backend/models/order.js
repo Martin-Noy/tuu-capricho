@@ -1,5 +1,6 @@
 import { DataTypes, Model } from 'sequelize';
 import sequelize from '../config/database.js';
+import User from './user.js';
 
 class Order extends Model {}
 
@@ -28,6 +29,16 @@ Order.init({
     allowNull: true,
     field: 'agenda_definition'
   },
+  userId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: { model: User, key: 'id' }
+  },
+  agendaType: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    field: 'agenda_type'
+  }
 }, {
   sequelize,
   modelName: 'Order',
@@ -36,5 +47,9 @@ Order.init({
   createdAt: 'created_at',
   updatedAt: 'updated_at'
 });
+
+// Relación: Un usuario tiene muchas órdenes
+User.hasMany(Order, { foreignKey: 'userId' });
+Order.belongsTo(User, { foreignKey: 'userId' });
 
 export default Order;

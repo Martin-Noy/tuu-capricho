@@ -11,6 +11,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import agendaImg from '../assets/agenda.png'; // importa la imagen
 
+//TO-DO: Agregar sección de testimonios, destacados y footer con información de contacto.
 function Home() {
   const navigate = useNavigate();
 

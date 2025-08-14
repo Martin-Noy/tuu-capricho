@@ -1,6 +1,7 @@
 // Archivo: AgendaBuilder.jsx (Modificado)
 
 import { useEffect, useReducer } from 'react';
+import { useCart } from '../context/CartContext.jsx';
 import { Box, Container, Heading, VStack, Text, Spinner, Alert, AlertIcon, SimpleGrid, useToast, Flex } from '@chakra-ui/react';
 import axios from 'axios';
 //---> 1. Importamos el nuevo componente
@@ -91,6 +92,7 @@ function agendaReducer(state, action) {
 const AgendaBuilder = () => {
   const [state, dispatch] = useReducer(agendaReducer, initialState);
   const toast = useToast();
+  const { addToCart } = useCart();
 
   useEffect(() => {
     const fetchSections = async () => {
@@ -104,37 +106,28 @@ const AgendaBuilder = () => {
     fetchSections();
   }, []);
 
-  const handleOrderSubmit = async (customerDetails) => {
-    dispatch({ type: 'SUBMIT_ORDER_START' });
-    try {
-        // Corregimos el payload para que coincida con lo que espera el backend
-        const payload = {
-            coverDetails: state.coverDetails,
-            items: state.items, // Cambiamos agendaItems por items
-            customerDetails
-        };
-        
-        console.log('🚀 Sending payload to backend:', payload);
-        await axios.post('/api/generate-agenda', payload);
-        dispatch({ type: 'SUBMIT_ORDER_SUCCESS' });
-        toast({
-            title: '¡Pedido realizado!',
-            description: "Hemos recibido tu capricho. Pronto estará listo.",
-            status: 'success',
-            duration: 9000,
-            isClosable: true,
-        });
-    } catch (error) {
-        dispatch({ type: 'SUBMIT_ORDER_FAILURE' });
-        console.error('❌ Error submitting order:', error.response?.data);
-        toast({
-            title: 'Error en el pedido.',
-            description: error.response?.data?.message || "No pudimos procesar tu pedido.",
-            status: 'error',
-            duration: 9000,
-            isClosable: true,
-        });
+  const handleOrderSubmit = (customerDetails) => {
+    if (state.items.length === 0) {
+      toast({ title: 'Agrega al menos una sección', status: 'warning' });
+      return;
     }
+    const customProduct = {
+      id: 'custom-agenda-' + new Date().getTime(),
+      name: 'Agenda Personalizada',
+      description: 'Agenda creada por el usuario',
+      basePrice: 800 + state.items.length * 50,
+      stock: 1,
+      isCustom: true,
+      details: {
+        cover: state.coverDetails,
+        sections: state.items,
+        totalPages: state.totalPages,
+        customerDetails
+      }
+    };
+    addToCart(customProduct, 1);
+    toast({ title: 'Agenda personalizada agregada al carrito', status: 'success' });
+    dispatch({ type: 'SUBMIT_ORDER_SUCCESS' });
   };
 
   if (state.loading) return <Spinner size="xl" />;
@@ -151,6 +144,28 @@ const AgendaBuilder = () => {
   }
 
   //---> 5. Reestructuramos el layout para añadir el nuevo paso
+  const handleAddToCart = () => {
+    if (state.items.length === 0) {
+      toast({ title: 'Agrega al menos una sección', status: 'warning' });
+      return;
+    }
+    const customProduct = {
+      id: 'custom-agenda-' + new Date().getTime(),
+      name: 'Agenda Personalizada',
+      description: 'Agenda creada por el usuario',
+      basePrice: 800 + state.items.length * 50, // ejemplo de precio base + por sección
+      stock: 1,
+      isCustom: true,
+      details: {
+        cover: state.coverDetails,
+        sections: state.items,
+        totalPages: state.totalPages
+      }
+    };
+    addToCart(customProduct, 1);
+    toast({ title: 'Agenda personalizada agregada al carrito', status: 'success' });
+  };
+
   return (
     <Box bgGradient="linear(to-br, pink.50, purple.50)" py={{ base: 8, md: 12 }}>
       <Container maxW="container.xl">
@@ -158,47 +173,36 @@ const AgendaBuilder = () => {
           <Heading as="h1" size="xl" color="gray.700">Personaliza tu Agenda</Heading>
           <Text color="gray.600">Sigue los pasos para crear la agenda de tus sueños.</Text>
         </VStack>
-        
         <SimpleGrid columns={{ base: 1, lg: 3 }} spacing={{ base: 8, md: 10 }} w="100%">
-          
-          {/* Columna Izquierda: Ahora tiene el diseñador de tapa Y el selector de secciones */}
           <VStack gridColumn={{ base: 'auto', lg: 'span 2' }} spacing={8} align="stretch">
-            {/* Paso 1: Diseñador de Tapa */}
             <Box bg="white" p={6} borderRadius="xl" boxShadow="lg">
               <StepHeading number="1" text="Diseña tu Tapa" />
               <CoverDesigner coverDetails={state.coverDetails} dispatch={dispatch} />
             </Box>
-
-            {/* Paso 2: Selector de Secciones */}
             <Box bg="white" p={6} borderRadius="xl" boxShadow="lg">
               <StepHeading number="2" text="Elige tus Secciones" />
               <SectionPicker sections={state.availableSections} dispatch={dispatch} />
             </Box>
           </VStack>
-
-          {/* Columna Derecha: Sigue teniendo la vista previa y el formulario */}
           <VStack spacing={8} bg="white" p={6} borderRadius="xl" boxShadow="lg" align="stretch" position="sticky" top="2rem">
              <Box>
-                {/* Ahora este es el paso 3 */}
                 <StepHeading number="3" text="Revisa tu Capricho" />
                 <AgendaPreview
                   items={state.items}
                   totalPages={state.totalPages}
                   maxPages={MAX_PAGES}
                   dispatch={dispatch}
-                  // Pasamos los detalles de la agenda para la previsualización
                   fullAgendaDetails={{ coverDetails: state.coverDetails, items: state.items }}
                 />
              </Box>
-             <Box>
-                {/* Y este el paso 4 */}
-                <StepHeading number="4" text="Finaliza tu Pedido" />
-                <OrderForm 
-                    isComplete={state.totalPages === MAX_PAGES} 
-                    onSubmit={handleOrderSubmit}
-                    isLoading={state.isSubmitting}
-                />
-             </Box>
+       <Box>
+        <StepHeading number="4" text="Finaliza tu Pedido" />
+        <OrderForm 
+          isComplete={state.totalPages === MAX_PAGES} 
+          onSubmit={handleOrderSubmit}
+          isLoading={state.isSubmitting}
+        />
+       </Box>
           </VStack>
         </SimpleGrid>
       </Container>

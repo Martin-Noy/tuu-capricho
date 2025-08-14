@@ -3,9 +3,18 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import sequelize from './config/database.js';
 import agendaRoutes from './routes/agendaRoutes.js';
+import authRoutes from './routes/authRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
+import productRoutes from './routes/productRoutes.js';
 import Order from './models/order.js';
 import Product from './models/product.js';
+import CartItem from './models/cartItem.js';
+import cartRoutes from './routes/cartRoutes.js';
+import User from './models/user.js';
 import path from 'path';
+import { seedProducts } from './services/seedProducts.js';
+import orderRoutes from './routes/orderRoutes.js';
+import adminOrdersRoutes from './routes/adminOrdersRoutes.js';
 
 dotenv.config();
 
@@ -18,7 +27,13 @@ app.use(express.json());
 
 // Routes
 app.use('/api', agendaRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/cart', cartRoutes);
 app.use('/PDFs', express.static(path.resolve(process.cwd(), 'PDFs')));
+app.use('/api/orders', orderRoutes);
+app.use('/api/admin/orders', adminOrdersRoutes);
 
 // Database connection
 const connectToDb = async () => {
@@ -27,10 +42,13 @@ const connectToDb = async () => {
     console.log('PostgreSQL connection has been established successfully.');
     
     // Sincronizar modelos con la base de datos
-    await Order.sync({ alter: true }); // 'alter: true' puede modificar la tabla si el modelo cambia
-    await Product.sync({ alter: true }); // Sincronizar también el modelo Product
-    console.log("The 'pedidos' and 'productos' tables have been successfully synced.");
+  await User.sync({ alter: true }); // Sincronizar el modelo User primero
+  await Order.sync({ alter: true }); // Luego sincronizar el modelo Order
+  await Product.sync({ alter: true }); // Sincronizar también el modelo Product
+  await CartItem.sync({ alter: true }); // Sincronizar el modelo CartItem
+  console.log("Las tablas 'usuarios', 'pedidos', 'productos' y 'cart_items' han sido sincronizadas correctamente.");
 
+    await seedProducts();
     app.listen(PORT, () => {
       console.log(`Backend server is running on http://localhost:${PORT}`);
     });

@@ -1,3 +1,4 @@
+//TO-DO: Agregar validaciones avanzadas, paginación y endpoint para importar productos por CSV.
 import Product from '../models/product.js';
 
 // Obtener todos los productos
